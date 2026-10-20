@@ -136,7 +136,7 @@ export default function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
           >
             <span className={styles.badgeDot} />
-            Special Celebration
+            With love ❤️
           </motion.div>
 
           <motion.h2
@@ -145,15 +145,17 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
           >
-            Scroll to <br />
-            <span className={styles.shimmer}>celebrate</span> 🎉
+            for my <br />
+            <span className={styles.shimmer}>purest blue</span>
+            <br />
+            <span className={styles.roseText}>rose 🌹</span>
           </motion.h2>
         </motion.div>
 
         {/* ── Scroll hint ── */}
         <motion.div className={styles.scrollHint} style={{ opacity: hintOpacity }}>
           <div className={styles.scrollLine} />
-          <span className={styles.scrollLabel}>Scroll</span>
+          <span className={styles.scrollLabel}>scroll for you 💙</span>
         </motion.div>
 
         {/* ── Happy Birthday ── */}
