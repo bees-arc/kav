@@ -22,6 +22,8 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
@@ -29,6 +31,8 @@ body {
   color: var(--color-text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 ::-webkit-scrollbar { width: 3px; }

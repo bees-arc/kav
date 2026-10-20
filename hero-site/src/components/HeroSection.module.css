@@ -2,19 +2,24 @@
    Scroll container — tall so user can scrub the video
 ══════════════════════════════ */
 .scrollContainer {
-  height: 500vh; /* tall = more scroll = smoother frame scrubbing */
+  height: 500vh;
   position: relative;
+  /* Prevent page from bouncing on touch */
+  overscroll-behavior: none;
 }
 
 /* ── Sticky viewport stays pinned at top ── */
 .stickyFrame {
+  position: -webkit-sticky; /* Safari */
   position: sticky;
   top: 0;
-  height: 100svh;
+  /* dvh = dynamic viewport height — adjusts for mobile browser chrome */
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
 }
 
 /* ══════════════════════════════

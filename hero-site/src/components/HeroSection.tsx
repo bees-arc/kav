@@ -38,29 +38,46 @@ export default function HeroSection() {
     offset: ['start start', 'end end'],
   });
 
-  // Spring-smoothed for visual transforms
+  // Spring-smoothed for visual transforms (text, overlays)
   const smooth = useSpring(scrollYProgress, {
-    stiffness: 150,
-    damping: 35,
+    stiffness: 100,
+    damping: 28,
     restDelta: 0.0001,
   });
 
-  // ── Video scrubbing: raw scroll → video currentTime (no spring lag)
+  // ── Video scrubbing: RAF lerp for butter-smooth frame seeking
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Make sure video is fully seekable
-    video.preload = 'auto';
+    let rafId: number;
+    let targetTime = 0;
+    let lerpedTime = 0;
+    const LERP = 0.1; // 0 = instant snap, lower = smoother/more lag
+
+    const tick = () => {
+      if (video.readyState >= 2 && video.duration) {
+        // Lerp toward target
+        lerpedTime += (targetTime - lerpedTime) * LERP;
+        const clamped = Math.max(0, Math.min(lerpedTime, video.duration - 0.001));
+        // Only seek if meaningfully different (avoids unnecessary seeks)
+        if (Math.abs(video.currentTime - clamped) > 0.005) {
+          video.currentTime = clamped;
+        }
+      }
+      rafId = requestAnimationFrame(tick);
+    };
 
     const unsub = scrollYProgress.on('change', (p) => {
-      if (video.readyState >= 2 && video.duration) {
-        // clamp to avoid edge glitch on last frame
-        video.currentTime = Math.min(p * video.duration, video.duration - 0.001);
-      }
+      targetTime = p * (video.duration || 0);
     });
 
-    return unsub;
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      unsub();
+      cancelAnimationFrame(rafId);
+    };
   }, [scrollYProgress]);
 
   // ── Intro content — visible at start, fades out quickly
