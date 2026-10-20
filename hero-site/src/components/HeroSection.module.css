@@ -2,9 +2,8 @@
    Scroll container — tall so user can scrub the video
 ══════════════════════════════ */
 .scrollContainer {
-  height: 500vh;
+  height: 700vh;
   position: relative;
-  /* Prevent page from bouncing on touch */
   overscroll-behavior: none;
 }
 

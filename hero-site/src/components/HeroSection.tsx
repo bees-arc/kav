@@ -45,59 +45,79 @@ export default function HeroSection() {
     restDelta: 0.0001,
   });
 
-  // ── Video scrubbing: RAF lerp for butter-smooth frame seeking
+  // ── Video scrubbing: requestVideoFrameCallback + fastSeek
+  //    rVFC fires right before the browser paints each video frame — most accurate timing
+  //    fastSeek() jumps to nearest keyframe instantly (much faster than currentTime on mobile)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let rafId: number;
     let targetTime = 0;
-    let lerpedTime = 0;
-    const LERP = 0.1; // 0 = instant snap, lower = smoother/more lag
+    let callbackId = 0;
+    const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+    const hasFastSeek = 'fastSeek' in video;
 
-    const tick = () => {
+    const seek = () => {
       if (video.readyState >= 2 && video.duration) {
-        // Lerp toward target
-        lerpedTime += (targetTime - lerpedTime) * LERP;
-        const clamped = Math.max(0, Math.min(lerpedTime, video.duration - 0.001));
-        // Only seek if meaningfully different (avoids unnecessary seeks)
-        if (Math.abs(video.currentTime - clamped) > 0.005) {
-          video.currentTime = clamped;
+        const t = Math.max(0, Math.min(targetTime, video.duration - 0.001));
+        // fastSeek snaps to nearest keyframe — much faster on mobile
+        if (hasFastSeek) {
+          (video as any).fastSeek(t);
+        } else {
+          video.currentTime = t;
         }
       }
-      rafId = requestAnimationFrame(tick);
     };
+
+    // requestVideoFrameCallback fires exactly when browser is ready to render next video frame
+    const onFrame = (_: DOMHighResTimeStamp, __: unknown) => {
+      seek();
+      callbackId = (video as any).requestVideoFrameCallback(onFrame);
+    };
+
+    if (hasRVFC) {
+      callbackId = (video as any).requestVideoFrameCallback(onFrame);
+    } else {
+      // Fallback: plain rAF
+      const tick = () => {
+        seek();
+        callbackId = requestAnimationFrame(tick) as unknown as number;
+      };
+      callbackId = requestAnimationFrame(tick) as unknown as number;
+    }
 
     const unsub = scrollYProgress.on('change', (p) => {
       targetTime = p * (video.duration || 0);
     });
 
-    rafId = requestAnimationFrame(tick);
-
     return () => {
       unsub();
-      cancelAnimationFrame(rafId);
+      if (hasRVFC) {
+        (video as any).cancelVideoFrameCallback(callbackId);
+      } else {
+        cancelAnimationFrame(callbackId as unknown as number);
+      }
     };
   }, [scrollYProgress]);
 
   // ── Intro content — visible at start, fades out quickly
-  const introOpacity = useTransform(smooth, [0, 0.15], [1, 0]);
-  const introY       = useTransform(smooth, [0, 0.15], ['0px', '-60px']);
+  const introOpacity = useTransform(smooth, [0, 0.12], [1, 0]);
+  const introY       = useTransform(smooth, [0, 0.12], ['0px', '-60px']);
 
   // ── Scroll hint fades very early
-  const hintOpacity = useTransform(smooth, [0, 0.07], [1, 0]);
+  const hintOpacity = useTransform(smooth, [0, 0.06], [1, 0]);
 
   // ── Celebratory pink overlay builds toward the end
-  const pinkOverlay = useTransform(smooth, [0.65, 1], [0, 0.55]);
+  const pinkOverlay = useTransform(smooth, [0.70, 1], [0, 0.55]);
 
   // ── Happy Birthday reveal
-  const bdOpacity = useTransform(smooth, [0.72, 0.90], [0, 1]);
-  const bdScale   = useTransform(smooth, [0.72, 0.95], [0.65, 1]);
-  const bdY       = useTransform(smooth, [0.72, 0.90], ['70px', '0px']);
+  const bdOpacity = useTransform(smooth, [0.80, 0.94], [0, 1]);
+  const bdScale   = useTransform(smooth, [0.80, 0.97], [0.65, 1]);
+  const bdY       = useTransform(smooth, [0.80, 0.94], ['70px', '0px']);
 
   // ── Subtitle + emojis pop in slightly after title
-  const subOpacity = useTransform(smooth, [0.85, 0.97], [0, 1]);
-  const subY       = useTransform(smooth, [0.85, 0.97], ['30px', '0px']);
+  const subOpacity = useTransform(smooth, [0.88, 0.98], [0, 1]);
+  const subY       = useTransform(smooth, [0.88, 0.98], ['30px', '0px']);
 
   // ── Progress bar
   const barScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
