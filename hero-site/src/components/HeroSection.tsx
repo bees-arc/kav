@@ -164,8 +164,11 @@ export default function HeroSection() {
 
     const setSize = () => {
       const dpr = window.devicePixelRatio || 1;
-      canvas.width  = canvas.offsetWidth  * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      if (w === 0 || h === 0) return;       // skip until layout is ready
+      canvas.width  = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
     };
     setSize();
     const obs = new ResizeObserver(setSize);
@@ -178,10 +181,13 @@ export default function HeroSection() {
 
     let lastIdx = -1;
     const draw = () => {
+      // If canvas not sized yet, retry next frame
+      if (canvas.width === 0 || canvas.height === 0) { setSize(); rafRef.current = requestAnimationFrame(draw); return; }
+
       let idx = frameIdxRef.current;
       const frames = framesRef.current;
 
-      // If this slot not yet captured, use nearest previous captured frame
+      // If slot not yet captured, walk back to nearest ready frame
       if (!frames[idx]) {
         for (let i = idx - 1; i >= 0; i--) {
           if (frames[i]) { idx = i; break; }
@@ -190,13 +196,15 @@ export default function HeroSection() {
 
       const bmp = frames[idx];
       if (bmp && idx !== lastIdx) {
-        const cw = canvas.offsetWidth;
-        const ch = canvas.offsetHeight;
-        const ir = bmp.width / bmp.height;
-        const cr = cw / ch;
+        // ── Use canvas.width/height (physical pixels) — matches the buffer exactly
+        const cw = canvas.width;
+        const ch = canvas.height;
+        // Cover-fit: scale bmp to fill canvas, crop excess
+        const ir = bmp.width / bmp.height;  // image ratio
+        const cr = cw / ch;                 // canvas ratio
         let sw = cw, sh = ch, sx = 0, sy = 0;
-        if (ir > cr) { sw = ch * ir; sx = -(sw - cw) / 2; }
-        else         { sh = cw / ir; sy = -(sh - ch) / 2; }
+        if (ir > cr) { sw = ch * ir; sx = -(sw - cw) / 2; }  // wider than canvas → crop sides
+        else         { sh = cw / ir; sy = -(sh - ch) / 2; }  // taller than canvas → crop top/bottom
         ctx.drawImage(bmp, sx, sy, sw, sh);
         lastIdx = idx;
       }
