@@ -4,6 +4,13 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import styles from './HeroSection.module.css';
 
+// ─── Capture config ──────────────────────────────────────
+const TARGET_FPS    = 24;   // frames/sec to capture
+const CAPTURE_SPEED = 4;    // play at 4× → 10 s video captured in ~2.5 s
+const CAPTURE_SCALE = 0.5;  // half-res capture (imperceptible on bg, 4× faster)
+const UNLOCK_AT     = 0.20; // enable scrolling once 20% frames ready (~0.5 s)
+// ─────────────────────────────────────────────────────────
+
 const HEARTS = [
   { id: 0,  e: '💗', l: '3%',  d: '0s',    dur: '7s',   s: '1.5rem' },
   { id: 1,  e: '💕', l: '9%',  d: '2.1s',  dur: '6s',   s: '1.1rem' },
@@ -27,82 +34,128 @@ const HEARTS = [
   { id: 19, e: '💓', l: '20%', d: '8.3s',  dur: '7s',   s: '1.2rem' },
 ];
 
-// ── How many frames to capture (higher = smoother but more RAM)
-// We capture frames by seeking a hidden video and snapshotting to ImageBitmap
-// This runs once on load in the browser — no ffmpeg needed!
-const TARGET_FPS = 24; // frames per second to capture
-
 export default function HeroSection() {
-  const containerRef   = useRef<HTMLDivElement>(null);
-  const canvasRef      = useRef<HTMLCanvasElement>(null);
-  const captureRef     = useRef<HTMLVideoElement>(null); // hidden, used for capture
-  const framesRef      = useRef<ImageBitmap[]>([]);
-  const frameIdxRef    = useRef(0);
-  const rafRef         = useRef<number>(0);
-  const [phase, setPhase]     = useState<'capturing' | 'ready'>('capturing');
-  const [progress, setProgress] = useState(0); // 0-100
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+  const captureRef   = useRef<HTMLVideoElement>(null);
+  // Sparse array — some slots undefined until captured
+  const framesRef    = useRef<(ImageBitmap | undefined)[]>([]);
+  const frameIdxRef  = useRef(0);
+  const rafRef       = useRef<number>(0);
+  const [phase, setPhase]       = useState<'loading' | 'ready'>('loading');
+  const [progress, setProgress] = useState(0);
 
   // ── Scroll
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
+  const smooth = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.0001 });
 
-  const smooth = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 28,
-    restDelta: 0.0001,
-  });
-
-  // ── Capture frames from video into ImageBitmap[]
-  //    Runs once on mount. Seeks a hidden <video>, grabs each frame via createImageBitmap.
+  // ── Frame capture
   const captureFrames = useCallback(async () => {
     const video = captureRef.current;
     if (!video) return;
 
+    // Wait for duration to be known
     await new Promise<void>((res) => {
-      if (video.readyState >= 2) { res(); return; }
+      if (video.readyState >= 1) { res(); return; }
       video.addEventListener('loadedmetadata', () => res(), { once: true });
     });
 
-    const duration = video.duration;
+    const duration    = video.duration;
     const totalFrames = Math.ceil(duration * TARGET_FPS);
-    const captured: ImageBitmap[] = [];
+    const frames: (ImageBitmap | undefined)[] = new Array(totalFrames);
+    let captured = 0;
+    let unlocked = false;
 
-    // Helper: seek + wait for seeked event
-    const seekTo = (t: number) =>
-      new Promise<void>((res) => {
-        video.currentTime = t;
-        video.addEventListener('seeked', () => res(), { once: true });
+    // Half-res offscreen canvas — way faster than full-res
+    const oc  = document.createElement('canvas');
+    oc.width  = Math.round(video.videoWidth  * CAPTURE_SCALE);
+    oc.height = Math.round(video.videoHeight * CAPTURE_SCALE);
+    const ctx = oc.getContext('2d', { alpha: false })!;
+
+    const tryUnlock = () => {
+      setProgress(Math.round((captured / totalFrames) * 100));
+      if (!unlocked && captured >= totalFrames * UNLOCK_AT) {
+        unlocked = true;
+        framesRef.current = frames; // share sparse array — draw loop handles gaps
+        setPhase('ready');
+      }
+    };
+
+    const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+
+    if (hasRVFC) {
+      // ── FAST PATH: play at 4× speed, capture via requestVideoFrameCallback
+      // 10 s video → ~2.5 s capture. No seek overhead at all.
+      video.playbackRate = CAPTURE_SPEED;
+      video.play();
+
+      await new Promise<void>((done) => {
+        const onFrame = (_: DOMHighResTimeStamp, meta: { mediaTime: number }) => {
+          const pct = meta.mediaTime / duration;
+          const idx = Math.min(Math.round(pct * (totalFrames - 1)), totalFrames - 1);
+
+          if (!frames[idx]) {
+            ctx.drawImage(video, 0, 0, oc.width, oc.height);
+            // Fire-and-forget — createImageBitmap is ~instant (GPU copy)
+            createImageBitmap(oc).then((bmp) => {
+              frames[idx] = bmp;
+              captured++;
+              tryUnlock();
+            });
+          }
+
+          if (meta.mediaTime < duration - 0.05) {
+            (video as any).requestVideoFrameCallback(onFrame);
+          } else {
+            video.pause();
+            // Brief wait for any in-flight createImageBitmap promises
+            setTimeout(() => {
+              framesRef.current = frames;
+              setPhase('ready');
+              setProgress(100);
+              done();
+            }, 400);
+          }
+        };
+
+        (video as any).requestVideoFrameCallback(onFrame);
       });
 
-    // Offscreen canvas for ImageBitmap capture
-    const offscreen = document.createElement('canvas');
-    offscreen.width  = video.videoWidth;
-    offscreen.height = video.videoHeight;
-    const ctx = offscreen.getContext('2d', { alpha: false })!;
+    } else {
+      // ── FALLBACK: seek-based at 12 fps (older browsers)
+      const FFPS  = 12;
+      const ftotal = Math.ceil(duration * FFPS);
+      const fframes: (ImageBitmap | undefined)[] = new Array(ftotal);
+      let fcap = 0, funlocked = false;
 
-    for (let i = 0; i < totalFrames; i++) {
-      const t = (i / (totalFrames - 1)) * duration;
-      await seekTo(t);
-      ctx.drawImage(video, 0, 0);
-      // createImageBitmap is GPU-accelerated and very fast to paint later
-      const bmp = await createImageBitmap(offscreen);
-      captured.push(bmp);
-      if (i % 5 === 0 || i === totalFrames - 1) {
-        setProgress(Math.round(((i + 1) / totalFrames) * 100));
+      for (let i = 0; i < ftotal; i++) {
+        const t = (i / Math.max(ftotal - 1, 1)) * duration;
+        await new Promise<void>((res) => {
+          video.currentTime = t;
+          video.addEventListener('seeked', () => res(), { once: true });
+        });
+        ctx.drawImage(video, 0, 0, oc.width, oc.height);
+        fframes[i] = await createImageBitmap(oc);
+        fcap++;
+        setProgress(Math.round((fcap / ftotal) * 100));
+        if (!funlocked && fcap >= ftotal * UNLOCK_AT) {
+          funlocked = true;
+          framesRef.current = fframes;
+          setPhase('ready');
+        }
       }
+      framesRef.current = fframes;
+      setPhase('ready');
+      setProgress(100);
     }
-
-    framesRef.current = captured;
-    setPhase('ready');
   }, []);
 
-  useEffect(() => {
-    captureFrames();
-  }, [captureFrames]);
+  useEffect(() => { captureFrames(); }, [captureFrames]);
 
-  // ── Draw loop: paint ImageBitmap matching current scroll frame
+  // ── Canvas draw loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -120,19 +173,25 @@ export default function HeroSection() {
 
     const unsub = scrollYProgress.on('change', (p) => {
       const total = framesRef.current.length;
-      if (total > 0) {
-        frameIdxRef.current = Math.min(Math.round(p * (total - 1)), total - 1);
-      }
+      if (total > 0) frameIdxRef.current = Math.min(Math.round(p * (total - 1)), total - 1);
     });
 
     let lastIdx = -1;
     const draw = () => {
-      const idx = frameIdxRef.current;
-      const bmp = framesRef.current[idx];
+      let idx = frameIdxRef.current;
+      const frames = framesRef.current;
+
+      // If this slot not yet captured, use nearest previous captured frame
+      if (!frames[idx]) {
+        for (let i = idx - 1; i >= 0; i--) {
+          if (frames[i]) { idx = i; break; }
+        }
+      }
+
+      const bmp = frames[idx];
       if (bmp && idx !== lastIdx) {
         const cw = canvas.offsetWidth;
         const ch = canvas.offsetHeight;
-        // Cover-fit
         const ir = bmp.width / bmp.height;
         const cr = cw / ch;
         let sw = cw, sh = ch, sx = 0, sy = 0;
@@ -145,11 +204,7 @@ export default function HeroSection() {
     };
     rafRef.current = requestAnimationFrame(draw);
 
-    return () => {
-      unsub();
-      cancelAnimationFrame(rafRef.current);
-      obs.disconnect();
-    };
+    return () => { unsub(); cancelAnimationFrame(rafRef.current); obs.disconnect(); };
   }, [scrollYProgress]);
 
   // ── Transforms
@@ -166,39 +221,30 @@ export default function HeroSection() {
 
   return (
     <section ref={containerRef} className={styles.scrollContainer}>
-      {/* Hidden video used only for frame capture */}
-      <video
-        ref={captureRef}
-        src="/hero.mp4"
-        muted
-        playsInline
-        preload="auto"
-        className={styles.hiddenVideo}
-      />
+      {/* Hidden video — capture source only, never shown */}
+      <video ref={captureRef} src="/hero.mp4" muted playsInline preload="auto"
+        className={styles.hiddenVideo} />
 
       <div className={styles.stickyFrame}>
-        {/* ── Canvas — displays captured ImageBitmaps ── */}
         <canvas ref={canvasRef} className={styles.canvas} />
 
-        {/* Capturing progress overlay */}
-        {phase === 'capturing' && (
+        {/* Loading overlay — disappears as soon as 20% frames ready */}
+        {phase === 'loading' && (
           <div className={styles.captureOverlay}>
             <div className={styles.captureBox}>
               <div className={styles.captureBar}>
                 <div className={styles.captureFill} style={{ width: `${progress}%` }} />
               </div>
               <p className={styles.captureLabel}>
-                {progress < 100 ? `Loading frames… ${progress}%` : 'Almost ready ✨'}
+                Preparing your surprise… {progress}%
               </p>
             </div>
           </div>
         )}
 
-        {/* Dark overlay */}
         <div className={styles.overlay} />
         <motion.div className={styles.celebOverlay} style={{ opacity: pinkOverlay }} />
 
-        {/* ── Floating Hearts ── */}
         <div className={styles.heartsLayer} aria-hidden="true">
           {HEARTS.map((h) => (
             <span key={h.id} className={styles.heart}
@@ -208,7 +254,6 @@ export default function HeroSection() {
           ))}
         </div>
 
-        {/* ── Intro Content ── */}
         <motion.div className={styles.intro} style={{ opacity: introOpacity, y: introY }}>
           <motion.div className={styles.badge}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -226,13 +271,11 @@ export default function HeroSection() {
           </motion.h2>
         </motion.div>
 
-        {/* ── Scroll hint ── */}
         <motion.div className={styles.scrollHint} style={{ opacity: hintOpacity }}>
           <div className={styles.scrollLine} />
           <span className={styles.scrollLabel}>scroll for you 💙</span>
         </motion.div>
 
-        {/* ── Happy Birthday ── */}
         <motion.div className={styles.birthday} style={{ opacity: bdOpacity }}>
           <motion.h1 className={styles.birthdayTitle} style={{ scale: bdScale, y: bdY }}>
             Happy<br />Birthday!
@@ -251,7 +294,6 @@ export default function HeroSection() {
           </motion.div>
         </motion.div>
 
-        {/* ── Progress bar ── */}
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />
       </div>
     </section>
