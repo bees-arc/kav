@@ -22,17 +22,71 @@
 }
 
 /* ══════════════════════════════
-   VIDEO
+   CANVAS — frame sequence player
 ══════════════════════════════ */
-.video {
+.canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  /* No filter/quality reduction — native quality preserved */
-  will-change: auto;
+  display: block;
+}
+
+/* Hidden video used only for frame capture (off-screen) */
+.hiddenVideo {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Frame capture loading overlay ── */
+.captureOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4rem;
+  background: rgba(8, 0, 15, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.captureBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: min(260px, 80%);
+}
+
+.captureBar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.captureFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b9d, #c084fc, #ffd700);
+  border-radius: 99px;
+  transition: width 0.15s ease;
+}
+
+.captureLabel {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: rgba(253, 220, 235, 0.55);
+  text-transform: uppercase;
 }
 
 /* ── Base dark gradient overlay ── */

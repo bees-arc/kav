@@ -1,10 +1,9 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import styles from './HeroSection.module.css';
 
-// SSR-safe deterministic hearts
 const HEARTS = [
   { id: 0,  e: '💗', l: '3%',  d: '0s',    dur: '7s',   s: '1.5rem' },
   { id: 1,  e: '💕', l: '9%',  d: '2.1s',  dur: '6s',   s: '1.1rem' },
@@ -28,160 +27,198 @@ const HEARTS = [
   { id: 19, e: '💓', l: '20%', d: '8.3s',  dur: '7s',   s: '1.2rem' },
 ];
 
-export default function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef    = useRef<HTMLVideoElement>(null);
+// ── How many frames to capture (higher = smoother but more RAM)
+// We capture frames by seeking a hidden video and snapshotting to ImageBitmap
+// This runs once on load in the browser — no ffmpeg needed!
+const TARGET_FPS = 24; // frames per second to capture
 
-  // Scroll progress tracks the full tall section
+export default function HeroSection() {
+  const containerRef   = useRef<HTMLDivElement>(null);
+  const canvasRef      = useRef<HTMLCanvasElement>(null);
+  const captureRef     = useRef<HTMLVideoElement>(null); // hidden, used for capture
+  const framesRef      = useRef<ImageBitmap[]>([]);
+  const frameIdxRef    = useRef(0);
+  const rafRef         = useRef<number>(0);
+  const [phase, setPhase]     = useState<'capturing' | 'ready'>('capturing');
+  const [progress, setProgress] = useState(0); // 0-100
+
+  // ── Scroll
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Spring-smoothed for visual transforms (text, overlays)
   const smooth = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 28,
     restDelta: 0.0001,
   });
 
-  // ── Video scrubbing: requestVideoFrameCallback + fastSeek
-  //    rVFC fires right before the browser paints each video frame — most accurate timing
-  //    fastSeek() jumps to nearest keyframe instantly (much faster than currentTime on mobile)
-  useEffect(() => {
-    const video = videoRef.current;
+  // ── Capture frames from video into ImageBitmap[]
+  //    Runs once on mount. Seeks a hidden <video>, grabs each frame via createImageBitmap.
+  const captureFrames = useCallback(async () => {
+    const video = captureRef.current;
     if (!video) return;
 
-    let targetTime = 0;
-    let callbackId = 0;
-    const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
-    const hasFastSeek = 'fastSeek' in video;
+    await new Promise<void>((res) => {
+      if (video.readyState >= 2) { res(); return; }
+      video.addEventListener('loadedmetadata', () => res(), { once: true });
+    });
 
-    const seek = () => {
-      if (video.readyState >= 2 && video.duration) {
-        const t = Math.max(0, Math.min(targetTime, video.duration - 0.001));
-        // fastSeek snaps to nearest keyframe — much faster on mobile
-        if (hasFastSeek) {
-          (video as any).fastSeek(t);
-        } else {
-          video.currentTime = t;
-        }
+    const duration = video.duration;
+    const totalFrames = Math.ceil(duration * TARGET_FPS);
+    const captured: ImageBitmap[] = [];
+
+    // Helper: seek + wait for seeked event
+    const seekTo = (t: number) =>
+      new Promise<void>((res) => {
+        video.currentTime = t;
+        video.addEventListener('seeked', () => res(), { once: true });
+      });
+
+    // Offscreen canvas for ImageBitmap capture
+    const offscreen = document.createElement('canvas');
+    offscreen.width  = video.videoWidth;
+    offscreen.height = video.videoHeight;
+    const ctx = offscreen.getContext('2d', { alpha: false })!;
+
+    for (let i = 0; i < totalFrames; i++) {
+      const t = (i / (totalFrames - 1)) * duration;
+      await seekTo(t);
+      ctx.drawImage(video, 0, 0);
+      // createImageBitmap is GPU-accelerated and very fast to paint later
+      const bmp = await createImageBitmap(offscreen);
+      captured.push(bmp);
+      if (i % 5 === 0 || i === totalFrames - 1) {
+        setProgress(Math.round(((i + 1) / totalFrames) * 100));
       }
-    };
-
-    // requestVideoFrameCallback fires exactly when browser is ready to render next video frame
-    const onFrame = (_: DOMHighResTimeStamp, __: unknown) => {
-      seek();
-      callbackId = (video as any).requestVideoFrameCallback(onFrame);
-    };
-
-    if (hasRVFC) {
-      callbackId = (video as any).requestVideoFrameCallback(onFrame);
-    } else {
-      // Fallback: plain rAF
-      const tick = () => {
-        seek();
-        callbackId = requestAnimationFrame(tick) as unknown as number;
-      };
-      callbackId = requestAnimationFrame(tick) as unknown as number;
     }
 
+    framesRef.current = captured;
+    setPhase('ready');
+  }, []);
+
+  useEffect(() => {
+    captureFrames();
+  }, [captureFrames]);
+
+  // ── Draw loop: paint ImageBitmap matching current scroll frame
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return;
+
+    const setSize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = canvas.offsetWidth  * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+    };
+    setSize();
+    const obs = new ResizeObserver(setSize);
+    obs.observe(canvas);
+
     const unsub = scrollYProgress.on('change', (p) => {
-      targetTime = p * (video.duration || 0);
+      const total = framesRef.current.length;
+      if (total > 0) {
+        frameIdxRef.current = Math.min(Math.round(p * (total - 1)), total - 1);
+      }
     });
+
+    let lastIdx = -1;
+    const draw = () => {
+      const idx = frameIdxRef.current;
+      const bmp = framesRef.current[idx];
+      if (bmp && idx !== lastIdx) {
+        const cw = canvas.offsetWidth;
+        const ch = canvas.offsetHeight;
+        // Cover-fit
+        const ir = bmp.width / bmp.height;
+        const cr = cw / ch;
+        let sw = cw, sh = ch, sx = 0, sy = 0;
+        if (ir > cr) { sw = ch * ir; sx = -(sw - cw) / 2; }
+        else         { sh = cw / ir; sy = -(sh - ch) / 2; }
+        ctx.drawImage(bmp, sx, sy, sw, sh);
+        lastIdx = idx;
+      }
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
 
     return () => {
       unsub();
-      if (hasRVFC) {
-        (video as any).cancelVideoFrameCallback(callbackId);
-      } else {
-        cancelAnimationFrame(callbackId as unknown as number);
-      }
+      cancelAnimationFrame(rafRef.current);
+      obs.disconnect();
     };
   }, [scrollYProgress]);
 
-  // ── Intro content — visible at start, fades out quickly
+  // ── Transforms
   const introOpacity = useTransform(smooth, [0, 0.12], [1, 0]);
   const introY       = useTransform(smooth, [0, 0.12], ['0px', '-60px']);
-
-  // ── Scroll hint fades very early
-  const hintOpacity = useTransform(smooth, [0, 0.06], [1, 0]);
-
-  // ── Celebratory pink overlay builds toward the end
-  const pinkOverlay = useTransform(smooth, [0.70, 1], [0, 0.55]);
-
-  // ── Happy Birthday reveal
-  const bdOpacity = useTransform(smooth, [0.80, 0.94], [0, 1]);
-  const bdScale   = useTransform(smooth, [0.80, 0.97], [0.65, 1]);
-  const bdY       = useTransform(smooth, [0.80, 0.94], ['70px', '0px']);
-
-  // ── Subtitle + emojis pop in slightly after title
-  const subOpacity = useTransform(smooth, [0.88, 0.98], [0, 1]);
-  const subY       = useTransform(smooth, [0.88, 0.98], ['30px', '0px']);
-
-  // ── Progress bar
-  const barScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  const hintOpacity  = useTransform(smooth, [0, 0.06], [1, 0]);
+  const pinkOverlay  = useTransform(smooth, [0.70, 1],  [0, 0.55]);
+  const bdOpacity    = useTransform(smooth, [0.80, 0.94], [0, 1]);
+  const bdScale      = useTransform(smooth, [0.80, 0.97], [0.65, 1]);
+  const bdY          = useTransform(smooth, [0.80, 0.94], ['70px', '0px']);
+  const subOpacity   = useTransform(smooth, [0.88, 0.98], [0, 1]);
+  const subY         = useTransform(smooth, [0.88, 0.98], ['30px', '0px']);
+  const barScaleX    = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
     <section ref={containerRef} className={styles.scrollContainer}>
-      {/* ── Sticky viewport ── */}
+      {/* Hidden video used only for frame capture */}
+      <video
+        ref={captureRef}
+        src="/hero.mp4"
+        muted
+        playsInline
+        preload="auto"
+        className={styles.hiddenVideo}
+      />
+
       <div className={styles.stickyFrame}>
+        {/* ── Canvas — displays captured ImageBitmaps ── */}
+        <canvas ref={canvasRef} className={styles.canvas} />
 
-        {/* VIDEO — scrubbed frame by frame */}
-        <video
-          ref={videoRef}
-          className={styles.video}
-          src="/hero.mp4"
-          muted
-          playsInline
-          preload="auto"
-        />
+        {/* Capturing progress overlay */}
+        {phase === 'capturing' && (
+          <div className={styles.captureOverlay}>
+            <div className={styles.captureBox}>
+              <div className={styles.captureBar}>
+                <div className={styles.captureFill} style={{ width: `${progress}%` }} />
+              </div>
+              <p className={styles.captureLabel}>
+                {progress < 100 ? `Loading frames… ${progress}%` : 'Almost ready ✨'}
+              </p>
+            </div>
+          </div>
+        )}
 
-        {/* Dark gradient overlay */}
+        {/* Dark overlay */}
         <div className={styles.overlay} />
-
-        {/* Pink/purple glow that intensifies at the end */}
         <motion.div className={styles.celebOverlay} style={{ opacity: pinkOverlay }} />
 
         {/* ── Floating Hearts ── */}
         <div className={styles.heartsLayer} aria-hidden="true">
           {HEARTS.map((h) => (
-            <span
-              key={h.id}
-              className={styles.heart}
-              style={{
-                left: h.l,
-                animationDelay: h.d,
-                animationDuration: h.dur,
-                fontSize: h.s,
-              }}
-            >
+            <span key={h.id} className={styles.heart}
+              style={{ left: h.l, animationDelay: h.d, animationDuration: h.dur, fontSize: h.s }}>
               {h.e}
             </span>
           ))}
         </div>
 
         {/* ── Intro Content ── */}
-        <motion.div
-          className={styles.intro}
-          style={{ opacity: introOpacity, y: introY }}
-        >
-          <motion.div
-            className={styles.badge}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-          >
+        <motion.div className={styles.intro} style={{ opacity: introOpacity, y: introY }}>
+          <motion.div className={styles.badge}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}>
             <span className={styles.badgeDot} />
             With love ❤️
           </motion.div>
-
-          <motion.h2
-            className={styles.introTitle}
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <motion.h2 className={styles.introTitle}
+            initial={{ opacity: 0, y: 35 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}>
             for my <br />
             <span className={styles.shimmer}>purest blue</span>
             <br />
@@ -197,27 +234,16 @@ export default function HeroSection() {
 
         {/* ── Happy Birthday ── */}
         <motion.div className={styles.birthday} style={{ opacity: bdOpacity }}>
-          <motion.h1
-            className={styles.birthdayTitle}
-            style={{ scale: bdScale, y: bdY }}
-          >
-            Happy
-            <br />
-            Birthday!
+          <motion.h1 className={styles.birthdayTitle} style={{ scale: bdScale, y: bdY }}>
+            Happy<br />Birthday!
           </motion.h1>
-
-          <motion.div
-            className={styles.birthdaySub}
-            style={{ opacity: subOpacity, y: subY }}
-          >
+          <motion.div className={styles.birthdaySub} style={{ opacity: subOpacity, y: subY }}>
             <span className={styles.bdEmoji}>🎂</span>
             <p className={styles.bdMsg}>
               Wishing you a day full of joy,<br />love & beautiful moments
             </p>
             <span className={styles.bdEmoji}>🎈</span>
           </motion.div>
-
-          {/* Sparkle row */}
           <motion.div className={styles.sparkles} style={{ opacity: subOpacity }}>
             {['✨','⭐','💫','⭐','✨'].map((s, i) => (
               <span key={i} className={styles.sparkle} style={{ animationDelay: `${i * 0.18}s` }}>{s}</span>
@@ -225,7 +251,7 @@ export default function HeroSection() {
           </motion.div>
         </motion.div>
 
-        {/* ── Bottom progress bar ── */}
+        {/* ── Progress bar ── */}
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />
       </div>
     </section>
