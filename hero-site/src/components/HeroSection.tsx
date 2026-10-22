@@ -325,7 +325,7 @@ export default function HeroSection() {
           <div className={styles.phraseRow}>
             <ScrollWord text="Rarest" type="shimmer" range={[0.17, 0.29]} progress={smooth} />
             <ScrollWord text="and" range={[0.27, 0.37]} progress={smooth} />
-            <ScrollWord text="Purest" type="shimmer" range={[0.36, 0.49]} progress={smooth} />
+            <ScrollWord text="Prettiest" type="shimmer" range={[0.36, 0.49]} progress={smooth} />
           </div>
 
           <div className={styles.phraseRow}>
