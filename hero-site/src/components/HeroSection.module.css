@@ -160,16 +160,22 @@
 /* ══════════════════════════════
    INTRO CONTENT
 ══════════════════════════════ */
-.intro {
+/* ══════════════════════════════
+   WORD-BY-WORD SCROLL MESSAGE
+══════════════════════════════ */
+.messageContainer {
   position: absolute;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 1.25rem;
-  padding: 0 1.5rem;
-  will-change: transform, opacity;
+  gap: 0.65rem;
+  padding: 0 1.25rem;
+  width: 100%;
+  max-width: 960px;
+  pointer-events: none;
+  will-change: transform;
 }
 
 .badge {
@@ -180,12 +186,13 @@
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 200, 220, 0.8);
+  color: rgba(255, 200, 220, 0.85);
   background: rgba(255, 107, 157, 0.12);
-  border: 1px solid rgba(255, 107, 157, 0.25);
+  border: 1px solid rgba(255, 107, 157, 0.28);
   border-radius: 99px;
-  padding: 0.4rem 1rem;
+  padding: 0.35rem 0.95rem;
   backdrop-filter: blur(10px);
+  margin-bottom: 0.2rem;
 }
 
 .badgeDot {
@@ -193,7 +200,7 @@
   height: 6px;
   border-radius: 50%;
   background: #ff6b9d;
-  box-shadow: 0 0 10px 3px rgba(255, 107, 157, 0.8);
+  box-shadow: 0 0 10px 3px rgba(255, 107, 157, 0.85);
   animation: pulseDot 2s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -203,17 +210,43 @@
   50%       { opacity: 0.35; transform: scale(0.75); }
 }
 
-.introTitle {
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 10vw, 5.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: #fdf0f5;
+.phraseRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3em 0.38em;
+  line-height: 1.15;
 }
 
-/* Animated shimmer gradient text */
-.shimmer {
+.phraseRowBirthday {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3em 0.42em;
+  line-height: 1;
+  margin-top: 0.25rem;
+}
+
+.scrollWord {
+  display: inline-flex;
+  align-items: baseline;
+  will-change: transform, opacity;
+  font-family: var(--font-display);
+}
+
+.wordPlain {
+  font-size: clamp(1.4rem, 4.5vw, 2.6rem);
+  font-weight: 700;
+  color: #fdf0f5;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 107, 157, 0.3);
+}
+
+.wordShimmer {
+  font-size: clamp(2rem, 7vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   background: linear-gradient(
     110deg,
     #ff6b9d 0%,
@@ -226,7 +259,9 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: shimmerMove 3s linear infinite;
+  animation: shimmerMove 3.5s linear infinite;
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 25px rgba(255, 107, 157, 0.55));
 }
 
 @keyframes shimmerMove {
@@ -234,20 +269,81 @@
   100% { background-position: -100% 0; }
 }
 
-/* "rose 🌹" — soft blue to blush gradient */
-.roseText {
+.wordBlue {
+  font-size: clamp(2.4rem, 8.5vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
   background: linear-gradient(
     110deg,
-    #60a5fa 0%,
-    #a78bfa 40%,
-    #f9a8d4 75%,
-    #fda4af 100%
+    #38bdf8 0%,
+    #60a5fa 35%,
+    #818cf8 70%,
+    #c084fc 100%
   );
-  background-size: 200% 100%;
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: shimmerMove 4s linear infinite;
+  filter: drop-shadow(0 3px 14px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 30px rgba(56, 189, 248, 0.8));
+}
+
+.wordRose {
+  font-size: clamp(2.4rem, 8.5vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(
+    110deg,
+    #f43f5e 0%,
+    #fb7185 35%,
+    #fda4af 65%,
+    #f472b6 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerMove 4s linear infinite;
+  filter: drop-shadow(0 3px 14px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 30px rgba(244, 63, 94, 0.8));
+}
+
+.wordBirthday {
+  font-size: clamp(2.8rem, 10.5vw, 6.2rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  background: linear-gradient(
+    135deg,
+    #ff6b9d 0%,
+    #ffd700 28%,
+    #c084fc 55%,
+    #ff6b9d 80%,
+    #ffd700 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradShift 4s ease infinite;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.95))
+          drop-shadow(0 0 40px rgba(255, 107, 157, 0.7))
+          drop-shadow(0 0 80px rgba(255, 215, 0, 0.5));
+}
+
+@keyframes gradShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.wordEmoji {
+  display: inline-block;
+  margin-left: 0.18em;
+  vertical-align: baseline;
+  font-size: 0.8em;
+  filter: drop-shadow(0 0 14px rgba(255, 107, 157, 0.8));
 }
 
 /* ══════════════════════════════
@@ -284,58 +380,19 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 180, 210, 0.5);
+  color: rgba(255, 180, 210, 0.6);
 }
 
 /* ══════════════════════════════
-   HAPPY BIRTHDAY
+   FINAL WISH CARD & EMOJIS
 ══════════════════════════════ */
-.birthday {
-  position: absolute;
-  z-index: 10;
+.finalWish {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 1.5rem;
-  padding: 0 1.25rem;
-  pointer-events: none;
-  will-change: opacity;
-}
-
-.birthdayTitle {
-  font-family: var(--font-display);
-  font-size: clamp(3.2rem, 15vw, 9.5rem);
-  font-weight: 900;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-
-  /* Animated gradient */
-  background: linear-gradient(
-    135deg,
-    #ff6b9d 0%,
-    #ffd700 28%,
-    #c084fc 55%,
-    #ff6b9d 80%,
-    #ffd700 100%
-  );
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradShift 4s ease infinite;
-
-  /* Soft glow instead of text-shadow (compatible with gradient text) */
-  filter: drop-shadow(0 0 45px rgba(255, 107, 157, 0.45))
-          drop-shadow(0 0 80px rgba(192, 132, 252, 0.3));
-
+  gap: 0.65rem;
+  margin-top: 0.5rem;
   will-change: transform, opacity;
-}
-
-@keyframes gradShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 .birthdaySub {
@@ -344,20 +401,20 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  will-change: transform, opacity;
 }
 
 .bdMsg {
   font-family: var(--font-body);
-  font-size: clamp(0.875rem, 2.8vw, 1.15rem);
+  font-size: clamp(0.85rem, 2.6vw, 1.1rem);
   font-weight: 400;
-  color: rgba(253, 220, 235, 0.88);
-  line-height: 1.65;
+  color: rgba(253, 220, 235, 0.95);
+  line-height: 1.6;
   max-width: 340px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
 }
 
 .bdEmoji {
-  font-size: clamp(1.6rem, 5vw, 2.5rem);
+  font-size: clamp(1.5rem, 4.5vw, 2.3rem);
   display: inline-block;
   animation: bdBounce 1.6s ease-in-out infinite;
   filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));

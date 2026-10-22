@@ -34,6 +34,47 @@ const HEARTS = [
   { id: 19, e: '💓', l: '20%', d: '8.3s',  dur: '7s',   s: '1.2rem' },
 ];
 
+// ─── Individual word revealed smoothly with scroll progress ─────
+function ScrollWord({
+  text,
+  type = 'plain',
+  range,
+  progress,
+  emoji,
+}: {
+  text: string;
+  type?: 'plain' | 'shimmer' | 'blue' | 'rose' | 'birthday';
+  range: [number, number];
+  progress: any;
+  emoji?: string;
+}) {
+  const [start, end] = range;
+  const opacity = useTransform(progress, [start, end], [0, 1]);
+  const y       = useTransform(progress, [start, end], [20, 0]);
+  const scale   = useTransform(progress, [start, end], [0.88, 1]);
+
+  const typeClass =
+    type === 'shimmer'
+      ? styles.wordShimmer
+      : type === 'blue'
+      ? styles.wordBlue
+      : type === 'rose'
+      ? styles.wordRose
+      : type === 'birthday'
+      ? styles.wordBirthday
+      : styles.wordPlain;
+
+  return (
+    <motion.span
+      className={`${styles.scrollWord} ${typeClass}`}
+      style={{ opacity, y, scale }}
+    >
+      {text}
+      {emoji && <span className={styles.wordEmoji}>{emoji}</span>}
+    </motion.span>
+  );
+}
+
 export default function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
@@ -162,6 +203,8 @@ export default function HeroSection() {
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
+    let lastIdx = -1;
+
     const setSize = () => {
       const dpr = window.devicePixelRatio || 1;
       const w = canvas.offsetWidth;
@@ -169,6 +212,7 @@ export default function HeroSection() {
       if (w === 0 || h === 0) return;       // skip until layout is ready
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
+      lastIdx = -1;                          // force redraw on resize
     };
     setSize();
     const obs = new ResizeObserver(setSize);
@@ -179,7 +223,6 @@ export default function HeroSection() {
       if (total > 0) frameIdxRef.current = Math.min(Math.round(p * (total - 1)), total - 1);
     });
 
-    let lastIdx = -1;
     const draw = () => {
       // If canvas not sized yet, retry next frame
       if (canvas.width === 0 || canvas.height === 0) { setSize(); rafRef.current = requestAnimationFrame(draw); return; }
@@ -187,10 +230,15 @@ export default function HeroSection() {
       let idx = frameIdxRef.current;
       const frames = framesRef.current;
 
-      // If slot not yet captured, walk back to nearest ready frame
+      // If slot not yet captured, search nearest available frame (backward, then forward)
       if (!frames[idx]) {
         for (let i = idx - 1; i >= 0; i--) {
           if (frames[i]) { idx = i; break; }
+        }
+        if (!frames[idx]) {
+          for (let i = idx + 1; i < frames.length; i++) {
+            if (frames[i]) { idx = i; break; }
+          }
         }
       }
 
@@ -215,16 +263,11 @@ export default function HeroSection() {
     return () => { unsub(); cancelAnimationFrame(rafRef.current); obs.disconnect(); };
   }, [scrollYProgress]);
 
-  // ── Transforms
-  const introOpacity = useTransform(smooth, [0, 0.12], [1, 0]);
-  const introY       = useTransform(smooth, [0, 0.12], ['0px', '-60px']);
-  const hintOpacity  = useTransform(smooth, [0, 0.06], [1, 0]);
-  const pinkOverlay  = useTransform(smooth, [0.70, 1],  [0, 0.55]);
-  const bdOpacity    = useTransform(smooth, [0.80, 0.94], [0, 1]);
-  const bdScale      = useTransform(smooth, [0.80, 0.97], [0.65, 1]);
-  const bdY          = useTransform(smooth, [0.80, 0.94], ['70px', '0px']);
-  const subOpacity   = useTransform(smooth, [0.88, 0.98], [0, 1]);
-  const subY         = useTransform(smooth, [0.88, 0.98], ['30px', '0px']);
+  // ── Scroll transforms
+  const hintOpacity  = useTransform(smooth, [0, 0.05], [1, 0]);
+  const pinkOverlay  = useTransform(smooth, [0.68, 1],  [0, 0.55]);
+  const wishOpacity  = useTransform(smooth, [0.88, 0.98], [0, 1]);
+  const wishY        = useTransform(smooth, [0.88, 0.98], ['20px', '0px']);
   const barScaleX    = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
@@ -262,44 +305,60 @@ export default function HeroSection() {
           ))}
         </div>
 
-        <motion.div className={styles.intro} style={{ opacity: introOpacity, y: introY }}>
-          <motion.div className={styles.badge}
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}>
+        {/* Animated word-by-word message loaded with scroll */}
+        <div className={styles.messageContainer}>
+          <motion.div
+            className={styles.badge}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
             <span className={styles.badgeDot} />
             With love ❤️
           </motion.div>
-          <motion.h2 className={styles.introTitle}
-            initial={{ opacity: 0, y: 35 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}>
-            for my <br />
-            <span className={styles.shimmer}>purest blue</span>
-            <br />
-            <span className={styles.roseText}>rose 🌹</span>
-          </motion.h2>
-        </motion.div>
+
+          <div className={styles.phraseRow}>
+            <ScrollWord text="To" range={[0.03, 0.12]} progress={smooth} />
+            <ScrollWord text="My" range={[0.09, 0.18]} progress={smooth} />
+          </div>
+
+          <div className={styles.phraseRow}>
+            <ScrollWord text="Rarest" type="shimmer" range={[0.17, 0.29]} progress={smooth} />
+            <ScrollWord text="and" range={[0.27, 0.37]} progress={smooth} />
+            <ScrollWord text="Purest" type="shimmer" range={[0.36, 0.49]} progress={smooth} />
+          </div>
+
+          <div className={styles.phraseRow}>
+            <ScrollWord text="Blue" type="blue" range={[0.48, 0.61]} progress={smooth} />
+            <ScrollWord text="Rose," type="rose" range={[0.59, 0.73]} progress={smooth} emoji="🌹" />
+          </div>
+
+          <div className={styles.phraseRowBirthday}>
+            <ScrollWord text="Happy" type="birthday" range={[0.72, 0.86]} progress={smooth} />
+            <ScrollWord text="Birthday." type="birthday" range={[0.83, 0.96]} progress={smooth} emoji="🎂" />
+          </div>
+
+          {/* Celebratory wish and sparkles reveal at end */}
+          <motion.div className={styles.finalWish} style={{ opacity: wishOpacity, y: wishY }}>
+            <div className={styles.birthdaySub}>
+              <p className={styles.bdMsg}>
+                Wishing you a day full of joy,<br />love & beautiful moments
+              </p>
+              <span className={styles.bdEmoji}>🎈</span>
+            </div>
+            <div className={styles.sparkles}>
+              {['✨', '⭐', '💫', '⭐', '✨'].map((s, i) => (
+                <span key={i} className={styles.sparkle} style={{ animationDelay: `${i * 0.18}s` }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
         <motion.div className={styles.scrollHint} style={{ opacity: hintOpacity }}>
           <div className={styles.scrollLine} />
           <span className={styles.scrollLabel}>scroll for you 💙</span>
-        </motion.div>
-
-        <motion.div className={styles.birthday} style={{ opacity: bdOpacity }}>
-          <motion.h1 className={styles.birthdayTitle} style={{ scale: bdScale, y: bdY }}>
-            Happy<br />Birthday!
-          </motion.h1>
-          <motion.div className={styles.birthdaySub} style={{ opacity: subOpacity, y: subY }}>
-            <span className={styles.bdEmoji}>🎂</span>
-            <p className={styles.bdMsg}>
-              Wishing you a day full of joy,<br />love & beautiful moments
-            </p>
-            <span className={styles.bdEmoji}>🎈</span>
-          </motion.div>
-          <motion.div className={styles.sparkles} style={{ opacity: subOpacity }}>
-            {['✨','⭐','💫','⭐','✨'].map((s, i) => (
-              <span key={i} className={styles.sparkle} style={{ animationDelay: `${i * 0.18}s` }}>{s}</span>
-            ))}
-          </motion.div>
         </motion.div>
 
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />
