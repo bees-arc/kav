@@ -273,6 +273,25 @@
   animation: tickPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.inputFieldError {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+
+.errorBadge {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.45rem;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  animation: tickPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
 @keyframes tickPop {
   0%   { transform: scale(0.3); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }

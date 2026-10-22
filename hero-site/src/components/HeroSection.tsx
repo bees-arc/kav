@@ -88,6 +88,9 @@ export default function HeroSection() {
   const [progress, setProgress] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const popupTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const extraScrollCountRef = useRef(0);
+  const lastScrollTimeRef = useRef(0);
+  const touchStartYRef = useRef(0);
 
   // ── Scroll
   const { scrollYProgress } = useScroll({
@@ -96,26 +99,81 @@ export default function HeroSection() {
   });
   const smooth = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.0001 });
 
-  // ── Trigger popup with blur after reaching the end of scroll (8s delay)
+  // ── Trigger popup: after 5s or if scrolled 3 more times at maximum scroll
   useEffect(() => {
+    const triggerNow = () => {
+      if (popupTimerRef.current) {
+        clearTimeout(popupTimerRef.current);
+        popupTimerRef.current = null;
+      }
+      setShowPopup(true);
+    };
+
     const unsub = scrollYProgress.on('change', (p) => {
       if (p >= 0.95) {
         if (!popupTimerRef.current && !showPopup) {
           popupTimerRef.current = setTimeout(() => {
-            setShowPopup(true);
-          }, 8000);
+            triggerNow();
+          }, 5000); // 5s fallback
         }
-      } else if (p < 0.85) {
+      } else if (p < 0.88) {
         if (popupTimerRef.current) {
           clearTimeout(popupTimerRef.current);
           popupTimerRef.current = null;
         }
+        extraScrollCountRef.current = 0;
       }
     });
+
+    const handleWheel = (e: WheelEvent) => {
+      if (showPopup) return;
+      const p = scrollYProgress.get();
+      if (p >= 0.95 && e.deltaY > 15) {
+        const now = Date.now();
+        if (now - lastScrollTimeRef.current > 180) {
+          extraScrollCountRef.current += 1;
+          lastScrollTimeRef.current = now;
+          if (extraScrollCountRef.current >= 3) {
+            triggerNow();
+          }
+        }
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        touchStartYRef.current = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (showPopup) return;
+      const p = scrollYProgress.get();
+      if (p >= 0.95 && e.changedTouches.length > 0) {
+        const delta = touchStartYRef.current - e.changedTouches[0].clientY;
+        if (delta > 25) { // swiping up to scroll down
+          const now = Date.now();
+          if (now - lastScrollTimeRef.current > 180) {
+            extraScrollCountRef.current += 1;
+            lastScrollTimeRef.current = now;
+            if (extraScrollCountRef.current >= 3) {
+              triggerNow();
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       unsub();
       if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, [scrollYProgress, showPopup]);
 

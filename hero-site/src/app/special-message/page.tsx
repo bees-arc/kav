@@ -103,6 +103,7 @@ export default function SpecialMessagePage() {
   const [ans3, setAns3] = useState('');
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ q1?: boolean; q2?: boolean; q3?: boolean }>({});
   const [showEmotionalModal, setShowEmotionalModal] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
 
@@ -165,6 +166,7 @@ export default function SpecialMessagePage() {
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setErrors({});
 
     // 1. Mandatory check: all 3 fields must be filled
     if (!ans1.trim() || !ans2.trim() || !ans3.trim()) {
@@ -176,11 +178,26 @@ export default function SpecialMessagePage() {
     const isQ2Right = isPurpleAnswer(ans2);
     const isQ3Right = isKaawyaAnswer(ans3);
 
-    // If Q1 or Q2 is wrong -> Error! Do NOT show emotional message, do NOT unlock.
+    // If Q1 or Q2 is wrong -> Error! Tell exactly which ones are wrong (including Q3 if also wrong)
     if (!isQ1Right || !isQ2Right) {
+      const wrongList: string[] = [];
+      if (!isQ1Right) wrongList.push('Question 1');
+      if (!isQ2Right) wrongList.push('Question 2');
+      if (!isQ3Right) wrongList.push('Question 3');
+
+      let whichWrong = '';
+      if (wrongList.length === 3) {
+        whichWrong = 'Questions 1, 2 & 3 are incorrect';
+      } else if (wrongList.length === 2) {
+        whichWrong = `${wrongList[0]} & ${wrongList[1]} are incorrect`;
+      } else {
+        whichWrong = `${wrongList[0]} is incorrect`;
+      }
+
       setErrorMsg(
-        'Hmm... Answers do not seem right 🥺 Questions 1 & 2 must be correct to confirm you are Kaawya. Please try again 💕'
+        `Sorry, this message is strictly for Kaawya! Only Kaawya is allowed to read this. (${whichWrong} - please check your answer!) 🔒`
       );
+      setErrors({ q1: !isQ1Right, q2: !isQ2Right, q3: !isQ3Right });
       return;
     }
 
@@ -278,16 +295,24 @@ export default function SpecialMessagePage() {
                     id="q1Input"
                     type="text"
                     value={ans1}
-                    onChange={(e) => setAns1(e.target.value)}
+                    onChange={(e) => {
+                      setAns1(e.target.value);
+                      if (errors.q1) setErrors((prev) => ({ ...prev, q1: false }));
+                      if (errorMsg) setErrorMsg(null);
+                    }}
                     placeholder="Type your answer here..."
-                    className={styles.inputField}
+                    className={`${styles.inputField} ${errors.q1 ? styles.inputFieldError : ''}`}
                     autoComplete="off"
                   />
-                  {q1Correct && (
+                  {q1Correct ? (
                     <div className={styles.tickStatus}>
                       <span className={styles.tickBadge}>✓ Correct 🏎️</span>
                     </div>
-                  )}
+                  ) : errors.q1 ? (
+                    <div className={styles.tickStatus}>
+                      <span className={styles.errorBadge}>✗ Incorrect</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -303,16 +328,24 @@ export default function SpecialMessagePage() {
                     id="q2Input"
                     type="text"
                     value={ans2}
-                    onChange={(e) => setAns2(e.target.value)}
+                    onChange={(e) => {
+                      setAns2(e.target.value);
+                      if (errors.q2) setErrors((prev) => ({ ...prev, q2: false }));
+                      if (errorMsg) setErrorMsg(null);
+                    }}
                     placeholder="Type your answer here..."
-                    className={styles.inputField}
+                    className={`${styles.inputField} ${errors.q2 ? styles.inputFieldError : ''}`}
                     autoComplete="off"
                   />
-                  {q2Correct && (
+                  {q2Correct ? (
                     <div className={styles.tickStatus}>
                       <span className={styles.tickBadge}>✓ Correct 💜</span>
                     </div>
-                  )}
+                  ) : errors.q2 ? (
+                    <div className={styles.tickStatus}>
+                      <span className={styles.errorBadge}>✗ Incorrect</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -328,16 +361,24 @@ export default function SpecialMessagePage() {
                     id="q3Input"
                     type="text"
                     value={ans3}
-                    onChange={(e) => setAns3(e.target.value)}
+                    onChange={(e) => {
+                      setAns3(e.target.value);
+                      if (errors.q3) setErrors((prev) => ({ ...prev, q3: false }));
+                      if (errorMsg) setErrorMsg(null);
+                    }}
                     placeholder="Type your answer here..."
-                    className={styles.inputField}
+                    className={`${styles.inputField} ${errors.q3 ? styles.inputFieldError : ''}`}
                     autoComplete="off"
                   />
-                  {q3Correct && (
+                  {q3Correct ? (
                     <div className={styles.tickStatus}>
                       <span className={styles.tickBadge}>✓ Correct ❤️</span>
                     </div>
-                  )}
+                  ) : errors.q3 ? (
+                    <div className={styles.tickStatus}>
+                      <span className={styles.errorBadge}>✗ Incorrect</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
