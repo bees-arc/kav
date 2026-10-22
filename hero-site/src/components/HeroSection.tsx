@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import styles from './HeroSection.module.css';
 
@@ -85,6 +86,8 @@ export default function HeroSection() {
   const rafRef       = useRef<number>(0);
   const [phase, setPhase]       = useState<'loading' | 'ready'>('loading');
   const [progress, setProgress] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const popupTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Scroll
   const { scrollYProgress } = useScroll({
@@ -92,6 +95,29 @@ export default function HeroSection() {
     offset: ['start start', 'end end'],
   });
   const smooth = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.0001 });
+
+  // ── Trigger popup with blur after reaching the end of scroll (8s delay)
+  useEffect(() => {
+    const unsub = scrollYProgress.on('change', (p) => {
+      if (p >= 0.95) {
+        if (!popupTimerRef.current && !showPopup) {
+          popupTimerRef.current = setTimeout(() => {
+            setShowPopup(true);
+          }, 8000);
+        }
+      } else if (p < 0.85) {
+        if (popupTimerRef.current) {
+          clearTimeout(popupTimerRef.current);
+          popupTimerRef.current = null;
+        }
+      }
+    });
+
+    return () => {
+      unsub();
+      if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+    };
+  }, [scrollYProgress, showPopup]);
 
   // ── Frame capture
   const captureFrames = useCallback(async () => {
@@ -362,6 +388,54 @@ export default function HeroSection() {
         </motion.div>
 
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />
+
+        {/* ── Blurred backdrop & floating jelly popup above all layers ── */}
+        {showPopup && (
+          <div className={styles.popupBackdrop}>
+            <div
+              className={styles.popupBackdropBlur}
+              onClick={() => setShowPopup(false)}
+            />
+            <motion.div
+              className={styles.popupJellyModal}
+              initial={{ scale: 0.35, opacity: 0, y: 35 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ type: 'spring', damping: 14, stiffness: 220 }}
+            >
+              <button
+                type="button"
+                className={styles.popupCloseBtn}
+                onClick={() => setShowPopup(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+
+              <div className={styles.popupGleam} />
+              <div className={styles.popupPulseGlow} />
+
+              <span className={styles.popupBadge}>✨ SPECIAL FOR KAAWYA ✨</span>
+
+              <div className={styles.popupIconWrapper}>
+                <span className={styles.popupIcon}>💌</span>
+              </div>
+
+              <h2 className={styles.popupTitle}>
+                Kaawya, You Have a Special Secret Message!
+              </h2>
+
+              <p className={styles.popupDesc}>
+                A private birthday letter and romantic surprise has been left just for you.
+              </p>
+
+              <Link href="/special-message" className={styles.popupJellyActionBtn}>
+                <span>Click Here to Open 💕</span>
+                <span className={styles.popupArrow}>→</span>
+              </Link>
+            </motion.div>
+          </div>
+        )}
       </div>
     </section>
   );
