@@ -2,8 +2,19 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, type MotionValue } from 'framer-motion';
 import styles from './HeroSection.module.css';
+
+interface VideoFrameCallbackMetadata {
+  mediaTime: number;
+  [key: string]: unknown;
+}
+
+type HTMLVideoElementWithCallback = HTMLVideoElement & {
+  requestVideoFrameCallback: (
+    callback: (now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => void
+  ) => number;
+};
 
 // ─── Capture config ──────────────────────────────────────
 const TARGET_FPS    = 24;   // frames/sec to capture
@@ -46,7 +57,7 @@ function ScrollWord({
   text: string;
   type?: 'plain' | 'shimmer' | 'blue' | 'rose' | 'birthday';
   range: [number, number];
-  progress: any;
+  progress: MotionValue<number>;
   emoji?: string;
 }) {
   const [start, end] = range;
@@ -233,7 +244,7 @@ export default function HeroSection() {
           }
 
           if (meta.mediaTime < duration - 0.05) {
-            (video as any).requestVideoFrameCallback(onFrame);
+            (video as HTMLVideoElementWithCallback).requestVideoFrameCallback(onFrame);
           } else {
             video.pause();
             // Brief wait for any in-flight createImageBitmap promises
@@ -246,7 +257,7 @@ export default function HeroSection() {
           }
         };
 
-        (video as any).requestVideoFrameCallback(onFrame);
+        (video as HTMLVideoElementWithCallback).requestVideoFrameCallback(onFrame);
       });
 
     } else {
@@ -417,10 +428,11 @@ export default function HeroSection() {
             <ScrollWord text="Rose," type="rose" range={[0.59, 0.73]} progress={smooth} emoji="🌹" />
           </div>
 
-          <div className={styles.phraseRowBirthday}>
-            <ScrollWord text="Happy" type="birthday" range={[0.72, 0.86]} progress={smooth} />
-            <ScrollWord text="Birthday." type="birthday" range={[0.83, 0.96]} progress={smooth} emoji="🎂" />
-          </div>
+          <h1 className={styles.phraseRowBirthday}>
+            <ScrollWord text="Happy" type="birthday" range={[0.70, 0.82]} progress={smooth} />
+            <ScrollWord text="Birthday" type="birthday" range={[0.79, 0.90]} progress={smooth} />
+            <ScrollWord text="Kaawya" type="birthday" range={[0.87, 0.98]} progress={smooth} emoji="🎂" />
+          </h1>
 
           {/* Celebratory wish and sparkles reveal at end */}
           <motion.div className={styles.finalWish} style={{ opacity: wishOpacity, y: wishY }}>

@@ -43,7 +43,7 @@ export default function Navbar() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
     >
-      <span className={styles.logo}>🎂 Boo's 23</span>
+      <span className={styles.logo}>🎂 Boo&apos;s 23</span>
 
       <div className={styles.rightSection}>
         <span className={styles.tagline}>Scroll to celebrate</span>
