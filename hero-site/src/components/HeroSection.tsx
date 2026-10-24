@@ -19,7 +19,7 @@ type HTMLVideoElementWithCallback = HTMLVideoElement & {
 // ─── Capture config ──────────────────────────────────────
 const TARGET_FPS    = 24;   // frames/sec to capture
 const CAPTURE_SPEED = 4;    // play at 4× → 10 s video captured in ~2.5 s
-const CAPTURE_SCALE = 0.5;  // half-res capture (imperceptible on bg, 4× faster)
+const CAPTURE_SCALE = 1.0;  // 100% crisp full native video resolution
 const UNLOCK_AT     = 0.20; // enable scrolling once 20% frames ready (~0.5 s)
 // ─────────────────────────────────────────────────────────
 
@@ -301,12 +301,14 @@ export default function HeroSection() {
     let lastIdx = -1;
 
     const setSize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       if (w === 0 || h === 0) return;       // skip until layout is ready
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       lastIdx = -1;                          // force redraw on resize
     };
     setSize();
@@ -348,6 +350,8 @@ export default function HeroSection() {
         let sw = cw, sh = ch, sx = 0, sy = 0;
         if (ir > cr) { sw = ch * ir; sx = -(sw - cw) / 2; }  // wider than canvas → crop sides
         else         { sh = cw / ir; sy = -(sh - ch) / 2; }  // taller than canvas → crop top/bottom
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(bmp, sx, sy, sw, sh);
         lastIdx = idx;
       }
