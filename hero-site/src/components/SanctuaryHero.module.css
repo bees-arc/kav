@@ -1,66 +1,68 @@
 /* ══════════════════════════════════════════════
-   Watercolor Underwater Reef Sanctuary Hero
-   EXACT Typography & Colors matching reference:
-   - Serif: 'Cormorant Garamond', serif
-   - Script: 'Allura', cursive
-   - Main text: #173B64
-   - Kaawya script: #0865B5
-   - Emphasis script: #123B65
+   Full Screen Watercolor Underwater Sanctuary Hero
+   - Full screen background image (100vw, 100dvh, object-fit: cover)
+   - Exact typography & colors matching reference
+   - No navbar, no scroll to second section
+   - Smooth slide transition to the right on arrow click
 ══════════════════════════════════════════════ */
 
 .heroContainer {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: #051324;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0) 0;
-  box-sizing: border-box;
+  background-color: #051324;
 }
 
-/* ── Holds exact 941/1672 aspect ratio to display 100% of the artwork ── */
-.artworkFrame {
-  position: relative;
-  width: 100%;
-  max-width: min(100vw, calc(100dvh * 941 / 1672));
-  aspect-ratio: 941 / 1672;
-  margin: 0 auto;
-  container-type: inline-size;
-  container-name: artwork;
-  overflow: hidden;
-}
-
-/* Complete background artwork (Whale, Dolphin, Jellyfish, Octopus, Turtle, Corals) */
+/* Full screen background artwork */
 .bgImage {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   display: block;
+  z-index: 1;
 }
 
-/* ── Text Clearing Overlay: Mapped to the central watercolor clearing ── */
-.textOverlay {
+/* Central soft light wash to ensure text readability over water ripples */
+.centerWashOverlay {
   position: absolute;
-  top: 16.8%;
-  bottom: 22.2%;
-  left: 14%;
-  right: 14%;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(240, 249, 255, 0.35) 45%,
+    transparent 78%
+  );
+  pointer-events: none;
+}
+
+/* ── Text Container: Centered on screen, proportioned for mobile ── */
+.textOverlay {
+  position: relative;
   z-index: 5;
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   text-align: center;
+  padding: clamp(1.25rem, 3.8vh, 2.5rem) 1.5rem clamp(1.25rem, 3.6vh, 2.2rem) 1.5rem;
   box-sizing: border-box;
   pointer-events: auto;
 }
 
-/* ── Header Section ── */
+/* ── Header Group ── */
 .headerGroup {
   display: flex;
   flex-direction: column;
@@ -68,10 +70,10 @@
   width: 100%;
 }
 
-/* Happy Birthday, -> Cormorant Garamond, 42px (960px) ~ 4.38cqi / ~17px (390px), weight 600, #173B64 */
+/* Happy Birthday, -> Cormorant Garamond, 42px (960px) ~ 17px (390px), weight 600, #173B64 */
 .mainTitle {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(15px, 4.38cqi, 42px);
+  font-size: clamp(16px, 4.4vw, 22px);
   font-weight: 600;
   color: #173b64;
   letter-spacing: -0.01em;
@@ -79,14 +81,14 @@
   margin: 0;
 }
 
-/* Kaawya ♡ -> Allura, 92px (960px) ~ 9.58cqi / ~38px (390px), weight 400, #0865B5 */
+/* Kaawya ♡ -> Allura, 92px (960px) ~ 38px (390px), weight 400, #0865B5 */
 .nameTitle {
   font-family: 'Allura', cursive;
-  font-size: clamp(33px, 9.58cqi, 92px);
+  font-size: clamp(34px, 9.6vw, 48px);
   font-weight: 400;
   color: #0865b5;
   line-height: 0.95;
-  margin: 0.1cqi 0;
+  margin: 0.15rem 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -96,7 +98,7 @@
 
 .heartGlyph {
   font-family: 'Allura', cursive;
-  font-size: clamp(24px, 7cqi, 68px);
+  font-size: clamp(24px, 7vw, 36px);
   font-weight: 400;
   color: #0865b5;
   display: inline-block;
@@ -111,7 +113,7 @@
   gap: 0.35rem;
   width: 50%;
   max-width: 150px;
-  margin: 0.1cqi auto 0.25cqi auto;
+  margin: 0.15rem auto 0.25rem auto;
 }
 
 .shellLine {
@@ -121,15 +123,15 @@
 }
 
 .shellIcon {
-  font-size: clamp(9px, 2.6cqi, 18px);
+  font-size: clamp(10px, 2.8vw, 15px);
   line-height: 1;
   opacity: 0.85;
 }
 
-/* Before the Magic Begins... -> Cormorant Garamond, 31px (960px) ~ 3.23cqi / ~13px (390px), weight 600, #173B64 */
+/* Before the Magic Begins... -> Cormorant Garamond, 31px (960px) ~ 13px (390px), weight 600, #173B64 */
 .subTitle {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(11.5px, 3.23cqi, 31px);
+  font-size: clamp(12px, 3.3vw, 16px);
   font-weight: 600;
   color: #173b64;
   letter-spacing: -0.01em;
@@ -143,27 +145,27 @@
   justify-content: space-evenly;
   flex: 1;
   width: 100%;
-  margin: 0.3cqi 0;
+  margin: 0.4rem 0;
 }
 
-/* Main & Final Paragraphs -> Cormorant Garamond, 22px (960px) ~ 2.29cqi / ~9.5px-10px (390px), weight 500, #173B64 */
+/* Main & Final Paragraphs -> Cormorant Garamond, 22px (960px) ~ 9.5px-10px (390px), weight 500, #173B64 */
 .paragraph {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(8.8px, 2.29cqi, 22px);
+  font-size: clamp(9.5px, 2.6vw, 12.5px);
   font-weight: 500;
-  line-height: 1.34;
+  line-height: 1.35;
   color: #173b64;
   margin: 0;
 }
 
-/* They can only be felt. -> Allura, 43px (960px) ~ 4.48cqi / ~18px (390px), weight 400, #123B65 */
+/* They can only be felt. -> Allura, 43px (960px) ~ 18px (390px), weight 400, #123B65 */
 .feltQuote {
   font-family: 'Allura', cursive;
-  font-size: clamp(16px, 4.48cqi, 43px);
+  font-size: clamp(18px, 4.8vw, 26px);
   font-weight: 400;
   color: #123b65;
   line-height: 1.05;
-  margin: 0.1cqi 0;
+  margin: 0.1rem 0;
   letter-spacing: 0.02em;
 }
 
@@ -175,7 +177,7 @@
   gap: 0.35rem;
   width: 42%;
   max-width: 120px;
-  margin: 0.15cqi auto 0.25cqi auto;
+  margin: 0.2rem auto 0.3rem auto;
 }
 
 .filigreeLine {
@@ -185,7 +187,7 @@
 }
 
 .filigreeHeart {
-  font-size: clamp(8px, 2.2cqi, 16px);
+  font-size: clamp(9px, 2.4vw, 14px);
   color: #0865b5;
   line-height: 1;
 }
@@ -197,16 +199,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: clamp(3px, 0.9cqi, 8px) clamp(4px, 1.1cqi, 10px) clamp(3px, 0.9cqi, 8px) clamp(8px, 2.4cqi, 18px);
+  padding: 0.32rem 0.45rem 0.32rem 0.95rem;
   border-radius: 9999px;
   background: linear-gradient(
     135deg,
-    rgba(224, 242, 254, 0.9) 0%,
-    rgba(186, 230, 253, 0.8) 50%,
-    rgba(199, 210, 254, 0.85) 100%
+    rgba(224, 242, 254, 0.92) 0%,
+    rgba(186, 230, 253, 0.85) 50%,
+    rgba(199, 210, 254, 0.9) 100%
   );
   border: 1px solid rgba(125, 211, 252, 0.85);
-  box-shadow: 0 2px 10px rgba(14, 116, 144, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 3px 12px rgba(14, 116, 144, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.8);
   color: #173b64;
   cursor: pointer;
   outline: none;
@@ -226,13 +228,13 @@
     rgba(186, 230, 253, 0.92) 100%
   );
   border-color: #38bdf8;
-  box-shadow: 0 4px 14px rgba(14, 116, 144, 0.26), 0 0 10px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 5px 16px rgba(14, 116, 144, 0.28), 0 0 12px rgba(56, 189, 248, 0.35);
 }
 
-/* Click the arrow... -> Cormorant Garamond, 23px (960px) ~ 2.4cqi / ~10px (390px), weight 500, #173B64 */
+/* Click the arrow... -> Cormorant Garamond, 23px (960px) ~ 10px (390px), weight 500, #173B64 */
 .btnLabel {
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(9px, 2.4cqi, 23px);
+  font-size: clamp(9.5px, 2.5vw, 13px);
   font-weight: 500;
   color: #173b64;
   letter-spacing: -0.01em;
@@ -242,8 +244,8 @@
 
 .arrowCircle {
   flex-shrink: 0;
-  width: clamp(18px, 4.8cqi, 34px);
-  height: clamp(18px, 4.8cqi, 34px);
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: linear-gradient(135deg, #38bdf8 0%, #0865b5 100%);
   display: flex;
@@ -254,8 +256,8 @@
 }
 
 .arrowSvg {
-  width: clamp(9px, 2.5cqi, 16px);
-  height: clamp(9px, 2.5cqi, 16px);
+  width: 13px;
+  height: 13px;
   stroke: #ffffff;
   stroke-width: 2.5;
 }
