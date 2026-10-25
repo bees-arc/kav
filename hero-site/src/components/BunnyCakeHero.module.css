@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════
    Dreamy Blue Bunny Birthday Cake Page
    - Full screen background (100vw, 100dvh)
+   - Mathematically locked candle flames to image coordinates
    - Candle blowing animation with realistic smoke & flicker
    - Candle blow-out message modal
    - Back button
@@ -21,16 +22,34 @@
   box-sizing: border-box;
 }
 
-/* ── Full Screen Background Artwork (Exact screen size) ── */
-.bgImage {
+/* ── Full Screen Stage that centers the aspect-ratio inner frame ── */
+.imageStage {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Exactly matches the 941/1672 aspect ratio scaled with object-fit: cover */
+.imageInner {
+  position: relative;
+  width: max(100vw, calc(100dvh * 941 / 1672));
+  height: max(100dvh, calc(100vw * 1672 / 941));
+  aspect-ratio: 941 / 1672;
+  flex-shrink: 0;
+}
+
+.bgImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
   display: block;
-  z-index: 1;
   transition: filter 1.2s ease;
 }
 
@@ -96,50 +115,59 @@
   stroke-width: 2.5;
 }
 
-/* ── Realistic Candle Flame Overlays Over Candles "2" and "3" ── */
+/* ── Realistic Candle Flame Overlays: Mathematically Locked to Image Coordinates ── */
 .flameContainer {
   position: absolute;
   inset: 0;
-  z-index: 8;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
   pointer-events: none;
 }
 
-.candleFlameLeft,
-.candleFlameRight {
+/* Candle 2 Flame: Exactly at X=555 (58.98%), Y=717 (42.88%) */
+.candleFlameLeft {
   position: absolute;
-  width: 16px;
-  height: 28px;
-  transform: translate(-50%, -100%);
+  top: 42.88%;
+  left: 58.98%;
+  transform: translate(-50%, -60%);
+  width: clamp(14px, 2.5%, 24px);
+  aspect-ratio: 16 / 28;
   border-radius: 50% 50% 20% 20%;
-  background: radial-gradient(ellipse at 50% 80%, #ffffff 0%, #fff7a0 30%, #ff9d00 70%, transparent 100%);
-  box-shadow: 0 0 16px #ffb300, 0 0 32px rgba(255, 140, 0, 0.6);
+  background: radial-gradient(ellipse at 50% 75%, #ffffff 0%, #fff7a0 35%, #ff9d00 70%, transparent 100%);
+  box-shadow: 0 0 12px #ffb300, 0 0 25px rgba(255, 140, 0, 0.65);
   animation: flameFlicker 0.18s infinite alternate ease-in-out;
   transform-origin: center bottom;
   pointer-events: none;
 }
 
-/* Coordinates matching candles "2" and "3" */
-.candleFlameLeft {
-  top: 43.2%;
-  left: 57.5%;
-}
-
+/* Candle 3 Flame: Exactly at X=676 (71.84%), Y=720 (43.06%) */
 .candleFlameRight {
-  top: 42%;
-  left: 70.2%;
+  position: absolute;
+  top: 43.06%;
+  left: 71.84%;
+  transform: translate(-50%, -60%);
+  width: clamp(14px, 2.5%, 24px);
+  aspect-ratio: 16 / 28;
+  border-radius: 50% 50% 20% 20%;
+  background: radial-gradient(ellipse at 50% 75%, #ffffff 0%, #fff7a0 35%, #ff9d00 70%, transparent 100%);
+  box-shadow: 0 0 12px #ffb300, 0 0 25px rgba(255, 140, 0, 0.65);
+  animation: flameFlicker 0.22s infinite alternate ease-in-out;
+  transform-origin: center bottom;
+  pointer-events: none;
 }
 
 @keyframes flameFlicker {
   0% {
-    transform: translate(-50%, -100%) scaleY(1) rotate(-1deg);
+    transform: translate(-50%, -60%) scaleY(1) rotate(-1deg);
     filter: brightness(1);
   }
   50% {
-    transform: translate(-50%, -100%) scaleY(1.08) rotate(1.5deg);
+    transform: translate(-50%, -60%) scaleY(1.08) rotate(1.5deg);
     filter: brightness(1.15);
   }
   100% {
-    transform: translate(-50%, -100%) scaleY(0.96) rotate(-0.5deg);
+    transform: translate(-50%, -60%) scaleY(0.96) rotate(-0.5deg);
     filter: brightness(0.95);
   }
 }
@@ -151,25 +179,27 @@
 
 @keyframes flameExtinguish {
   0% {
-    transform: translate(-50%, -100%) scale(1.2) rotate(-8deg);
+    transform: translate(-50%, -60%) scale(1.2) rotate(-8deg);
     opacity: 1;
   }
   40% {
-    transform: translate(-50%, -100%) scale(0.6) rotate(15deg);
+    transform: translate(-50%, -60%) scale(0.6) rotate(15deg);
     opacity: 0.8;
     filter: brightness(1.4);
   }
   100% {
-    transform: translate(-50%, -110%) scale(0) rotate(25deg);
+    transform: translate(-50%, -70%) scale(0) rotate(25deg);
     opacity: 0;
   }
 }
 
 /* Smoke Wisp Rising after blow out */
-.smokeWisp {
+.smokeWispLeft {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  top: 42.88%;
+  left: 58.98%;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(235, 245, 255, 0.75) 0%, rgba(200, 225, 250, 0.35) 60%, transparent 100%);
   filter: blur(4px);
@@ -177,17 +207,30 @@
   pointer-events: none;
 }
 
+.smokeWispRight {
+  position: absolute;
+  top: 43.06%;
+  left: 71.84%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(235, 245, 255, 0.75) 0%, rgba(200, 225, 250, 0.35) 60%, transparent 100%);
+  filter: blur(4px);
+  animation: smokeDrift 2.2s 0.12s forwards ease-out;
+  pointer-events: none;
+}
+
 @keyframes smokeDrift {
   0% {
-    transform: translate(-50%, -100%) scale(0.5);
+    transform: translate(-50%, -50%) scale(0.5);
     opacity: 0.85;
   }
   50% {
-    transform: translate(-45%, -220%) scale(2.2);
+    transform: translate(-45%, -180%) scale(2.2);
     opacity: 0.55;
   }
   100% {
-    transform: translate(-40%, -360%) scale(3.8);
+    transform: translate(-40%, -320%) scale(3.8);
     opacity: 0;
   }
 }
