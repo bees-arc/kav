@@ -104,9 +104,10 @@ export default function SanctuaryHero({
             to be captured in photographs or described in words…
           </p>
 
+          {/* Calligraphic Quote */}
           <p className={styles.feltQuote}>They can only be felt.</p>
 
-          <p className={styles.paragraph}>
+          <p className={styles.finalParagraph}>
             And you, Kaawya, are one of those<br />
             beautiful, once-in-a-lifetime kinds of magic. 💙
           </p>

@@ -30,16 +30,17 @@
   z-index: 1;
 }
 
-/* Central soft light wash to ensure text readability over water ripples */
+/* Central soft light wash to ensure text readability over water ripples & coral textures */
 .centerWashOverlay {
   position: absolute;
   inset: 0;
   z-index: 2;
   background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(255, 255, 255, 0.52) 0%,
-    rgba(240, 249, 255, 0.35) 45%,
-    transparent 78%
+    ellipse 68% 64% at 50% 50%,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(240, 249, 255, 0.58) 45%,
+    rgba(224, 242, 254, 0.3) 72%,
+    transparent 96%
   );
   pointer-events: none;
 }
@@ -79,6 +80,7 @@
   letter-spacing: -0.01em;
   line-height: 1.15;
   margin: 0;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 /* Kaawya ♡ -> Allura, 92px (960px) ~ 38px (390px), weight 400, #0865B5 */
@@ -94,6 +96,7 @@
   justify-content: center;
   gap: 0.35rem;
   letter-spacing: 0.02em;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 1px 2px rgba(255, 255, 255, 1);
 }
 
 .heartGlyph {
@@ -136,6 +139,7 @@
   color: #173b64;
   letter-spacing: -0.01em;
   margin: 0;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 /* ── Main Paragraphs Section ── */
@@ -148,7 +152,7 @@
   margin: 0.4rem 0;
 }
 
-/* Main & Final Paragraphs -> Cormorant Garamond, 22px (960px) ~ 9.5px-10px (390px), weight 500, #173B64 */
+/* Main Paragraphs -> Cormorant Garamond, 22px (960px) ~ 9.5px-10px (390px), weight 500, #173B64 */
 .paragraph {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: clamp(9.5px, 2.6vw, 12.5px);
@@ -156,17 +160,30 @@
   line-height: 1.35;
   color: #173b64;
   margin: 0;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 1px 2px #ffffff;
 }
 
-/* They can only be felt. -> Allura, 43px (960px) ~ 18px (390px), weight 400, #123B65 */
+/* They can only be felt. -> Allura, crisp & enhanced contrast with white halo */
 .feltQuote {
   font-family: 'Allura', cursive;
-  font-size: clamp(18px, 4.8vw, 26px);
-  font-weight: 400;
-  color: #123b65;
+  font-size: clamp(20px, 5.2vw, 29px);
+  font-weight: 600;
+  color: #0c2847;
   line-height: 1.05;
-  margin: 0.1rem 0;
-  letter-spacing: 0.02em;
+  margin: 0.15rem 0;
+  letter-spacing: 0.025em;
+  text-shadow: 0 0 14px #ffffff, 0 0 6px #ffffff, 0 1px 2px #ffffff;
+}
+
+/* Final emotional paragraph -> Enhanced contrast against bottom ripples/corals */
+.finalParagraph {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(10px, 2.7vw, 13px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: #0c2847;
+  margin: 0;
+  text-shadow: 0 0 12px #ffffff, 0 0 6px #ffffff, 0 1px 2px #ffffff;
 }
 
 /* ── Delicate Heart Filigree ── */
