@@ -40,42 +40,43 @@ export default function BunnyCakeHero({
 
   return (
     <section className={styles.cakeContainer} aria-label="Dreamy Blue Bunny Birthday Cake">
-      {/* ── Full Screen Background Image (WebP high-res, 10x smaller file size) ── */}
-      <Image
-        src="/Dreamy Blue Birthday Bunny Cake.webp"
-        alt="Dreamy Blue Birthday Bunny Cake"
-        fill
-        priority
-        sizes="100vw"
-        className={`${styles.bgImage} ${candlesBlown ? styles.dimmedBg : ''}`}
-        quality={95}
-      />
+      {/* ── Full Screen Stage: Centers aspect-ratio image and locks flame overlays ── */}
+      <div className={styles.imageStage}>
+        <div className={styles.imageInner}>
+          <Image
+            src="/Dreamy Blue Birthday Bunny Cake.webp"
+            alt="Dreamy Blue Birthday Bunny Cake"
+            fill
+            priority
+            sizes="100vw"
+            className={`${styles.bgImage} ${candlesBlown ? styles.dimmedBg : ''}`}
+            quality={95}
+          />
+
+          {/* ── Interactive Candle Flames locked to exact image coordinates ── */}
+          <div className={styles.flameContainer} aria-hidden="true">
+            {/* Left flame ("2") */}
+            <div
+              className={`${styles.candleFlameLeft} ${candlesBlown ? styles.flameBlowing : ''}`}
+            />
+            {/* Right flame ("3") */}
+            <div
+              className={`${styles.candleFlameRight} ${candlesBlown ? styles.flameBlowing : ''}`}
+            />
+
+            {/* Smoke Wisps when blown out */}
+            {candlesBlown && (
+              <>
+                <div className={styles.smokeWispLeft} />
+                <div className={styles.smokeWispRight} />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Atmospheric center light wash */}
       <div className={styles.centerWashOverlay} aria-hidden="true" />
-
-      {/* ── Interactive Candle Flames over candles "2" and "3" ── */}
-      <div className={styles.flameContainer} aria-hidden="true">
-        {/* Left flame ("2") */}
-        <div
-          className={`${styles.candleFlameLeft} ${candlesBlown ? styles.flameBlowing : ''}`}
-        />
-        {/* Right flame ("3") */}
-        <div
-          className={`${styles.candleFlameRight} ${candlesBlown ? styles.flameBlowing : ''}`}
-        />
-
-        {/* Smoke Wisps when blown out */}
-        {candlesBlown && (
-          <>
-            <div className={styles.smokeWisp} style={{ top: '42.5%', left: '57.5%' }} />
-            <div
-              className={styles.smokeWisp}
-              style={{ top: '41.5%', left: '70.2%', animationDelay: '0.12s' }}
-            />
-          </>
-        )}
-      </div>
 
       {/* ── Back Button (Top Left) ── */}
       {onBackClick && (
