@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import SanctuaryHero from '@/components/SanctuaryHero';
+import BunnyCakeHero from '@/components/BunnyCakeHero';
 import HeroSection from '@/components/HeroSection';
 
 export default function Home() {
@@ -54,7 +55,10 @@ export default function Home() {
             transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           >
             <Navbar />
-            <HeroSection />
+            <BunnyCakeHero nextSectionId="original-hero" />
+            <div id="original-hero">
+              <HeroSection />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
