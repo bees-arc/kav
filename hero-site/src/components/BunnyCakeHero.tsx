@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import styles from './BunnyCakeHero.module.css';
 
 interface BunnyCakeHeroProps {
@@ -13,21 +15,67 @@ export default function BunnyCakeHero({
   onBackClick,
   onNextClick,
 }: BunnyCakeHeroProps) {
+  const [candlesBlown, setCandlesBlown] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleMakeAWish = () => {
+    if (candlesBlown) return;
+
+    // Trigger candle blow-out animation
+    setCandlesBlown(true);
+
+    // Launch celebratory confetti burst
+    confetti({
+      particleCount: 55,
+      spread: 75,
+      origin: { y: 0.62 },
+      colors: ['#38bdf8', '#818cf8', '#ffd700', '#f472b6', '#ffffff'],
+    });
+
+    // Reveal birthday letter after candles extinguish
+    setTimeout(() => {
+      setShowModal(true);
+    }, 950);
+  };
+
   return (
     <section className={styles.cakeContainer} aria-label="Dreamy Blue Bunny Birthday Cake">
-      {/* ── Full Screen Background Image (Exact screen size 100vw, 100dvh) ── */}
+      {/* ── Full Screen Background Image (WebP high-res, 10x smaller file size) ── */}
       <Image
-        src="/Dreamy Blue Bunny Birthday Cake.png"
-        alt="Dreamy Blue Bunny Birthday Cake"
+        src="/Dreamy Blue Birthday Bunny Cake.webp"
+        alt="Dreamy Blue Birthday Bunny Cake"
         fill
         priority
         sizes="100vw"
-        className={styles.bgImage}
+        className={`${styles.bgImage} ${candlesBlown ? styles.dimmedBg : ''}`}
         quality={95}
       />
 
       {/* Atmospheric center light wash */}
       <div className={styles.centerWashOverlay} aria-hidden="true" />
+
+      {/* ── Interactive Candle Flames over candles "2" and "3" ── */}
+      <div className={styles.flameContainer} aria-hidden="true">
+        {/* Left flame ("2") */}
+        <div
+          className={`${styles.candleFlameLeft} ${candlesBlown ? styles.flameBlowing : ''}`}
+        />
+        {/* Right flame ("3") */}
+        <div
+          className={`${styles.candleFlameRight} ${candlesBlown ? styles.flameBlowing : ''}`}
+        />
+
+        {/* Smoke Wisps when blown out */}
+        {candlesBlown && (
+          <>
+            <div className={styles.smokeWisp} style={{ top: '42.5%', left: '57.5%' }} />
+            <div
+              className={styles.smokeWisp}
+              style={{ top: '41.5%', left: '70.2%', animationDelay: '0.12s' }}
+            />
+          </>
+        )}
+      </div>
 
       {/* ── Back Button (Top Left) ── */}
       {onBackClick && (
@@ -114,8 +162,8 @@ export default function BunnyCakeHero({
         <button
           type="button"
           className={styles.actionPillBtn}
-          onClick={onNextClick}
-          aria-label="Make a wish and light the candles"
+          onClick={handleMakeAWish}
+          aria-label="Make a wish and blow out the candles"
         >
           <div className={styles.btnTextWrap}>
             <span className={styles.btnWishScript}>
@@ -141,6 +189,58 @@ export default function BunnyCakeHero({
           </span>
         </button>
       </motion.div>
+
+      {/* ── Candle Blow-Out Wish Modal ── */}
+      <AnimatePresence>
+        {showModal && (
+          <div className={styles.modalBackdrop}>
+            <motion.div
+              className={styles.modalCard}
+              initial={{ opacity: 0, scale: 0.85, y: 25 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 240 }}
+            >
+              <span className={styles.modalSparkleTop}>✨🎂✨</span>
+
+              <h2 className={styles.modalTitle}>
+                Happiest Birthday, Kavya!<span className={styles.modalHeartRed}>❤️</span>
+              </h2>
+
+              <div className={styles.modalBody}>
+                <p className={styles.modalPara}>
+                  As you blow out those candles, I hope every little wish you make finds its way to you...
+                </p>
+
+                <p className={styles.modalPara}>
+                  And everything you hold close to your heart, every beautiful dream and every unspoken wish, slowly finds its way into reality. 💙
+                </p>
+
+                <p className={styles.modalPara}>
+                  May this new chapter of your life bring you the kind of happiness that doesn&apos;t simply come and go, but stays with you, quietly and beautifully.
+                </p>
+
+                <p className={styles.modalPara}>
+                  May your days be filled with moments that turn into unforgettable memories, dreams that blossom into reality, and countless little reasons to smile, even when there&apos;s no particular reason at all.
+                </p>
+
+                <p className={styles.modalPara}>
+                  Because you deserve a life filled with beautiful surprises, gentle moments, and all the happiness your heart could ever wish for. ❤️
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.modalContinueBtn}
+                onClick={onNextClick}
+              >
+                <span>Continue to Your Story 💕</span>
+                <span>→</span>
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

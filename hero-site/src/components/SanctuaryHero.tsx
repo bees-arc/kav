@@ -28,7 +28,7 @@ export default function SanctuaryHero({
     <section className={styles.heroContainer} aria-label="Kaawya's Birthday Greeting">
       {/* Full screen background artwork */}
       <Image
-        src="/Dreamy Underwater Reef Sanctuary.png"
+        src="/Dreamy Underwater Reef Sanctuary.webp"
         alt="Dreamy Underwater Reef Sanctuary"
         fill
         priority

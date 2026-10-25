@@ -1,11 +1,9 @@
 /* ══════════════════════════════════════════════
    Dreamy Blue Bunny Birthday Cake Page
-   EXACT match to user mockup:
-   - Full screen background image (100vw, 100dvh, object-fit: cover)
-   - No scroll, no navbar
-   - Glassmorphic Back button (top left)
-   - Top typography group (Close your eyes... / Make a Wish / Tap the button...)
-   - Bottom frosted glass "Make a Wish ♡ >" action pill
+   - Full screen background (100vw, 100dvh)
+   - Candle blowing animation with realistic smoke & flicker
+   - Candle blow-out message modal
+   - Back button
 ══════════════════════════════════════════════ */
 
 .cakeContainer {
@@ -33,6 +31,11 @@
   object-position: center;
   display: block;
   z-index: 1;
+  transition: filter 1.2s ease;
+}
+
+.dimmedBg {
+  filter: brightness(0.85) contrast(1.02);
 }
 
 /* ── Atmospheric Soft Center Clearing Light ── */
@@ -63,7 +66,7 @@
   gap: 0.4rem;
   padding: 0.38rem 0.85rem 0.38rem 0.7rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(186, 230, 253, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -81,7 +84,7 @@
 .backBtn:hover,
 .backBtn:focus-visible {
   transform: translateX(-2px) scale(1.03);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border-color: #38bdf8;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
 }
@@ -91,6 +94,102 @@
   height: 14px;
   stroke: #173b64;
   stroke-width: 2.5;
+}
+
+/* ── Realistic Candle Flame Overlays Over Candles "2" and "3" ── */
+.flameContainer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.candleFlameLeft,
+.candleFlameRight {
+  position: absolute;
+  width: 16px;
+  height: 28px;
+  transform: translate(-50%, -100%);
+  border-radius: 50% 50% 20% 20%;
+  background: radial-gradient(ellipse at 50% 80%, #ffffff 0%, #fff7a0 30%, #ff9d00 70%, transparent 100%);
+  box-shadow: 0 0 16px #ffb300, 0 0 32px rgba(255, 140, 0, 0.6);
+  animation: flameFlicker 0.18s infinite alternate ease-in-out;
+  transform-origin: center bottom;
+  pointer-events: none;
+}
+
+/* Coordinates matching candles "2" and "3" */
+.candleFlameLeft {
+  top: 43.2%;
+  left: 57.5%;
+}
+
+.candleFlameRight {
+  top: 42%;
+  left: 70.2%;
+}
+
+@keyframes flameFlicker {
+  0% {
+    transform: translate(-50%, -100%) scaleY(1) rotate(-1deg);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translate(-50%, -100%) scaleY(1.08) rotate(1.5deg);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: translate(-50%, -100%) scaleY(0.96) rotate(-0.5deg);
+    filter: brightness(0.95);
+  }
+}
+
+/* When blowing out */
+.flameBlowing {
+  animation: flameExtinguish 0.7s forwards ease-out !important;
+}
+
+@keyframes flameExtinguish {
+  0% {
+    transform: translate(-50%, -100%) scale(1.2) rotate(-8deg);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -100%) scale(0.6) rotate(15deg);
+    opacity: 0.8;
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: translate(-50%, -110%) scale(0) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+/* Smoke Wisp Rising after blow out */
+.smokeWisp {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(235, 245, 255, 0.75) 0%, rgba(200, 225, 250, 0.35) 60%, transparent 100%);
+  filter: blur(4px);
+  animation: smokeDrift 2.2s forwards ease-out;
+  pointer-events: none;
+}
+
+@keyframes smokeDrift {
+  0% {
+    transform: translate(-50%, -100%) scale(0.5);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(-45%, -220%) scale(2.2);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-40%, -360%) scale(3.8);
+    opacity: 0;
+  }
 }
 
 /* ── Top Typography Area (Exact match to image) ── */
@@ -313,4 +412,118 @@
   height: 16px;
   stroke: #ffffff;
   stroke-width: 2.5;
+}
+
+/* ══════════════════════════════════════════════
+   Candle Blow-Out Message Modal Card
+══════════════════════════════════════════════ */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(8, 18, 36, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.modalCard {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(240, 249, 255, 0.92) 50%,
+    rgba(224, 242, 254, 0.9) 100%
+  );
+  border: 1.5px solid rgba(186, 230, 253, 0.9);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 4.5vh, 2.2rem) 1.5rem clamp(1.25rem, 3.5vh, 1.8rem) 1.5rem;
+  box-shadow: 0 20px 60px rgba(7, 24, 52, 0.45),
+    0 0 35px rgba(56, 189, 248, 0.25),
+    inset 0 1px 3px rgba(255, 255, 255, 1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.modalSparkleTop {
+  font-size: 1.5rem;
+  margin-bottom: 0.35rem;
+  display: inline-block;
+  animation: floatMote 2.5s infinite ease-in-out alternate;
+}
+
+@keyframes floatMote {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-4px) scale(1.15); }
+}
+
+.modalTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.4rem, 4.8vw, 1.8rem);
+  font-weight: 700;
+  color: #173b64;
+  margin: 0 0 0.85rem 0;
+  line-height: 1.2;
+}
+
+.modalHeartRed {
+  color: #e11d48;
+  display: inline-block;
+  margin-left: 0.2rem;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 1.35rem;
+}
+
+.modalPara {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(0.96rem, 3vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: #1a3c63;
+  margin: 0;
+}
+
+.modalContinueBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.6rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  color: #ffffff;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.modalContinueBtn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 26px rgba(37, 99, 235, 0.45);
+}
+
+.modalContinueBtn:active {
+  transform: translateY(1px) scale(0.97);
 }

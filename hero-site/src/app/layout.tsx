@@ -92,6 +92,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/Dreamy%20Blue%20Birthday%20Bunny%20Cake.webp"
+          type="image/webp"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/Dreamy%20Underwater%20Reef%20Sanctuary.webp"
+          type="image/webp"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
