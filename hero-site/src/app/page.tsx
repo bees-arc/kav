@@ -5,15 +5,16 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import SanctuaryHero from '@/components/SanctuaryHero';
 import BunnyCakeHero from '@/components/BunnyCakeHero';
+import WishMessagePage from '@/components/WishMessagePage';
 import HeroSection from '@/components/HeroSection';
 
-type PageStep = 'sanctuary' | 'cake' | 'experience';
+type PageStep = 'sanctuary' | 'cake' | 'wish' | 'experience';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState<PageStep>('sanctuary');
   const [direction, setDirection] = useState<1 | -1>(1);
 
-  // Lock body scroll on the first two static full-screen pages
+  // Lock body scroll on the full-screen interactive pages
   useEffect(() => {
     if (currentStep !== 'experience') {
       document.body.style.overflow = 'hidden';
@@ -27,21 +28,6 @@ export default function Home() {
     };
   }, [currentStep]);
 
-  const goToCake = () => {
-    setDirection(1);
-    setCurrentStep('cake');
-  };
-
-  const goBackToSanctuary = () => {
-    setDirection(-1);
-    setCurrentStep('sanctuary');
-  };
-
-  const goToExperience = () => {
-    setDirection(1);
-    setCurrentStep('experience');
-  };
-
   return (
     <main style={{ position: 'relative', overflowX: 'hidden', minHeight: '100dvh' }}>
       <AnimatePresence mode="wait" custom={direction}>
@@ -49,10 +35,10 @@ export default function Home() {
           <motion.div
             key="step-sanctuary"
             custom={direction}
-            initial={{ opacity: 0, x: direction === 1 ? -60 : 60 }}
+            initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{
-              x: direction === 1 ? '100%' : '-100%',
+              x: '100%',
               opacity: 0,
               transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
             }}
@@ -66,7 +52,12 @@ export default function Home() {
               overflow: 'hidden',
             }}
           >
-            <SanctuaryHero onNextClick={goToCake} />
+            <SanctuaryHero
+              onNextClick={() => {
+                setDirection(1);
+                setCurrentStep('cake');
+              }}
+            />
           </motion.div>
         )}
 
@@ -74,14 +65,15 @@ export default function Home() {
           <motion.div
             key="step-cake"
             custom={direction}
-            initial={{ opacity: 0, x: direction === 1 ? -60 : 60 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, scale: 0.95, y: direction === 1 ? '15%' : '-15%' }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{
-              x: direction === 1 ? '100%' : '-100%',
               opacity: 0,
+              scale: 0.95,
+              y: direction === 1 ? '-25%' : '25%',
               transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
             }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ type: 'spring', damping: 28, stiffness: 220, mass: 0.8 }}
             style={{
               position: 'fixed',
               inset: 0,
@@ -92,8 +84,50 @@ export default function Home() {
             }}
           >
             <BunnyCakeHero
-              onBackClick={goBackToSanctuary}
-              onNextClick={goToExperience}
+              onBackClick={() => {
+                setDirection(-1);
+                setCurrentStep('sanctuary');
+              }}
+              onNextClick={() => {
+                setDirection(1);
+                setCurrentStep('wish');
+              }}
+            />
+          </motion.div>
+        )}
+
+        {currentStep === 'wish' && (
+          <motion.div
+            key="step-wish"
+            custom={direction}
+            initial={{ opacity: 0, y: direction === 1 ? '45%' : '-35%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{
+              opacity: 0,
+              y: direction === 1 ? '-40%' : '40%',
+              transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+            }}
+            transition={{ type: 'spring', damping: 28, stiffness: 220, mass: 0.8 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              width: '100%',
+              height: '100dvh',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <WishMessagePage
+              onBackClick={() => {
+                setDirection(-1);
+                setCurrentStep('cake');
+              }}
+              onNextClick={() => {
+                setDirection(1);
+                setCurrentStep('experience');
+              }}
             />
           </motion.div>
         )}
@@ -101,8 +135,8 @@ export default function Home() {
         {currentStep === 'experience' && (
           <motion.div
             key="step-experience"
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 40, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           >
             <Navbar />

@@ -104,6 +104,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/Dreamy%20Underwater%20Reef%20Sanctuary.webp"
           type="image/webp"
         />
+        <link
+          rel="preload"
+          as="image"
+          href="/download%20(4).webp"
+          type="image/webp"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

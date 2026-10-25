@@ -16,7 +16,6 @@ export default function BunnyCakeHero({
   onNextClick,
 }: BunnyCakeHeroProps) {
   const [candlesBlown, setCandlesBlown] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   const handleMakeAWish = () => {
     if (candlesBlown) return;
@@ -26,16 +25,16 @@ export default function BunnyCakeHero({
 
     // Launch celebratory confetti burst
     confetti({
-      particleCount: 55,
-      spread: 75,
+      particleCount: 65,
+      spread: 80,
       origin: { y: 0.62 },
       colors: ['#38bdf8', '#818cf8', '#ffd700', '#f472b6', '#ffffff'],
     });
 
-    // Reveal birthday letter after candles extinguish
+    // After 2 seconds, transition to the message page
     setTimeout(() => {
-      setShowModal(true);
-    }, 950);
+      onNextClick?.();
+    }, 2000);
   };
 
   return (
@@ -191,57 +190,6 @@ export default function BunnyCakeHero({
         </button>
       </motion.div>
 
-      {/* ── Candle Blow-Out Wish Modal ── */}
-      <AnimatePresence>
-        {showModal && (
-          <div className={styles.modalBackdrop}>
-            <motion.div
-              className={styles.modalCard}
-              initial={{ opacity: 0, scale: 0.85, y: 25 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 240 }}
-            >
-              <span className={styles.modalSparkleTop}>✨🎂✨</span>
-
-              <h2 className={styles.modalTitle}>
-                Happiest Birthday, Kavya!<span className={styles.modalHeartRed}>❤️</span>
-              </h2>
-
-              <div className={styles.modalBody}>
-                <p className={styles.modalPara}>
-                  As you blow out those candles, I hope every little wish you make finds its way to you...
-                </p>
-
-                <p className={styles.modalPara}>
-                  And everything you hold close to your heart, every beautiful dream and every unspoken wish, slowly finds its way into reality. 💙
-                </p>
-
-                <p className={styles.modalPara}>
-                  May this new chapter of your life bring you the kind of happiness that doesn&apos;t simply come and go, but stays with you, quietly and beautifully.
-                </p>
-
-                <p className={styles.modalPara}>
-                  May your days be filled with moments that turn into unforgettable memories, dreams that blossom into reality, and countless little reasons to smile, even when there&apos;s no particular reason at all.
-                </p>
-
-                <p className={styles.modalPara}>
-                  Because you deserve a life filled with beautiful surprises, gentle moments, and all the happiness your heart could ever wish for. ❤️
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className={styles.modalContinueBtn}
-                onClick={onNextClick}
-              >
-                <span>Continue to Your Story 💕</span>
-                <span>→</span>
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }
