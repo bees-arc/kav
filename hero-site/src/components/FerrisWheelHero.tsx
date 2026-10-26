@@ -307,8 +307,14 @@ export default function FerrisWheelHero({
             </div>
           </header>
 
-          {/* Letter Body Paragraphs */}
+          {/* Letter Body Paragraphs with Highlighted Topics */}
           <div className={styles.letterBody}>
+            {/* Topic 1 */}
+            <div className={styles.topicHeading}>
+              <span className={styles.topicBadge}>Chapter I</span>
+              <h2 className={styles.topicTitle}>The Kindness in Your Heart</h2>
+            </div>
+
             <p>
               One of the very first things I noticed about you, when I was just
               beginning to know you, was the kindness you carried in your heart.
@@ -345,6 +351,12 @@ export default function FerrisWheelHero({
               incredibly rare about a soul that chooses kindness so naturally. And I
               hope you never lose that beautiful part of yourself.
             </p>
+
+            {/* Topic 2 */}
+            <div className={styles.topicHeading}>
+              <span className={styles.topicBadge}>Chapter II</span>
+              <h2 className={styles.topicTitle}>The Way You Simply Exist</h2>
+            </div>
 
             <p>
               You might not even realize it, but there&apos;s something incredibly
@@ -390,8 +402,10 @@ export default function FerrisWheelHero({
               how incredibly lucky I am to have someone like you in my life.
             </p>
 
-            <div className={styles.sectionDivider} aria-hidden="true">
-              <span>✦ ✦ ✦</span>
+            {/* Topic 3 */}
+            <div className={styles.topicHeading}>
+              <span className={styles.topicBadge}>Chapter III</span>
+              <h2 className={styles.topicTitle}>Learning Love Through You</h2>
             </div>
 
             <p>
@@ -419,6 +433,12 @@ export default function FerrisWheelHero({
               You never had to ask me to change. You simply loved the world in your own
               beautiful way, and somehow, that love began changing mine.
             </p>
+
+            {/* Topic 4 */}
+            <div className={styles.topicHeading}>
+              <span className={styles.topicBadge}>Chapter IV</span>
+              <h2 className={styles.topicTitle}>A Soul for My Sculpture</h2>
+            </div>
 
             <p>
               Before you became such a beautiful part of my life, there were pieces of
@@ -453,6 +473,12 @@ export default function FerrisWheelHero({
               extraordinary. You were simply yourself. And somehow, that was enough to
               make so many ordinary things feel beautiful.
             </p>
+
+            {/* Topic 5 */}
+            <div className={styles.topicHeading}>
+              <span className={styles.topicBadge}>Chapter V</span>
+              <h2 className={styles.topicTitle}>Forever My Beautiful Angel</h2>
+            </div>
 
             <p>
               There are still so many chapters of life ahead of us, so many things to
