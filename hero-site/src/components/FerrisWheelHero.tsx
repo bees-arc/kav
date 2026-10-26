@@ -298,7 +298,6 @@ export default function FerrisWheelHero({
         >
           {/* Letter Header */}
           <header className={styles.letterHeader}>
-            <span className={styles.headerTag}>For Kaawya 🕊️</span>
             <h1 className={styles.headerTitle}>My Beautiful Little Angel</h1>
             <div className={styles.heartDivider} aria-hidden="true">
               <span className={styles.dividerLine} />
