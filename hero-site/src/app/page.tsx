@@ -114,8 +114,7 @@ export default function Home() {
               zIndex: 50,
               width: '100%',
               height: '100dvh',
-              overflowY: 'auto',
-              overflowX: 'hidden',
+              overflow: 'hidden',
               backgroundColor: '#ffffff',
             }}
           >

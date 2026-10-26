@@ -15,8 +15,19 @@ export default function WishMessagePage({
 }: WishMessagePageProps) {
   return (
     <section className={styles.pageContainer} aria-label="Birthday Wish Letter for Kaawya">
-      {/* Sized Frame holding the ribbon and text together */}
-      <div className={styles.sheetFrame}>
+      {/* ── Artwork Frame matching 675 x 1200 ratio ── */}
+      <div className={styles.artworkFrame}>
+        {/* Full Frame Ribbon Background Image: download (4).webp */}
+        <Image
+          src="/download (4).webp"
+          alt="Coquette Blue Ribbon Background"
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 550px"
+          className={styles.ribbonBg}
+          quality={95}
+        />
+
         {/* Back Button */}
         {onBackClick && (
           <motion.button
@@ -26,7 +37,7 @@ export default function WishMessagePage({
             aria-label="Go back to cake page"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
           >
@@ -45,25 +56,12 @@ export default function WishMessagePage({
           </motion.button>
         )}
 
-        {/* ── Coquette Blue Ribbon Top Artwork ── */}
-        <div className={styles.ribbonWrapper}>
-          <Image
-            src="/download (4).webp"
-            alt="Coquette Blue Ribbon Artwork"
-            fill
-            priority
-            sizes="100vw"
-            className={styles.ribbonImg}
-            quality={95}
-          />
-        </div>
-
-        {/* ── Direct Text Content (Matching Mockup Exactly) ── */}
+        {/* ── Direct Text Content (Matching Mockup Exactly, within one screen) ── */}
         <motion.div
           className={styles.textContent}
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* Titles Group */}
           <div className={styles.titleGroup}>
@@ -130,17 +128,19 @@ export default function WishMessagePage({
           </div>
 
           {/* Action Continue Button */}
-          <div className={styles.actionBottom}>
-            <button
-              type="button"
-              className={styles.continueBtn}
-              onClick={onNextClick}
-              aria-label="Continue to celebration story"
-            >
-              <span>Continue to Your Story 💕</span>
-              <span>→</span>
-            </button>
-          </div>
+          {onNextClick && (
+            <div className={styles.actionBottom}>
+              <button
+                type="button"
+                className={styles.continueBtn}
+                onClick={onNextClick}
+                aria-label="Continue to celebration story"
+              >
+                <span>Continue 💕</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     </section>
