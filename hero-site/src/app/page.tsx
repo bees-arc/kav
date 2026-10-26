@@ -6,9 +6,10 @@ import Navbar from '@/components/Navbar';
 import SanctuaryHero from '@/components/SanctuaryHero';
 import BunnyCakeHero from '@/components/BunnyCakeHero';
 import WishMessagePage from '@/components/WishMessagePage';
+import FerrisWheelHero from '@/components/FerrisWheelHero';
 import HeroSection from '@/components/HeroSection';
 
-type PageStep = 'sanctuary' | 'cake' | 'wish' | 'experience';
+type PageStep = 'sanctuary' | 'cake' | 'wish' | 'ferris' | 'experience';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState<PageStep>('sanctuary');
@@ -122,6 +123,41 @@ export default function Home() {
               onBackClick={() => {
                 setDirection(-1);
                 setCurrentStep('cake');
+              }}
+              onNextClick={() => {
+                setDirection(1);
+                setCurrentStep('ferris');
+              }}
+            />
+          </motion.div>
+        )}
+
+        {currentStep === 'ferris' && (
+          <motion.div
+            key="step-ferris"
+            custom={direction}
+            initial={{ opacity: 0, y: direction === 1 ? '40%' : '-30%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{
+              opacity: 0,
+              y: direction === 1 ? '-35%' : '35%',
+              transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+            }}
+            transition={{ type: 'spring', damping: 28, stiffness: 220, mass: 0.8 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              width: '100%',
+              height: '100dvh',
+              overflow: 'hidden',
+              backgroundColor: '#0b1928',
+            }}
+          >
+            <FerrisWheelHero
+              onBackClick={() => {
+                setDirection(-1);
+                setCurrentStep('wish');
               }}
               onNextClick={() => {
                 setDirection(1);

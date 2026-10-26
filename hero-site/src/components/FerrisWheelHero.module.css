@@ -1,0 +1,221 @@
+/* ══════════════════════════════════════════════
+   Ferris Wheel Video Background Page
+   - Seamless portrait video background
+   - Glassmorphism & delicate typography
+   - Single-screen fit with zero scrolling
+══════════════════════════════════════════════ */
+
+.pageContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0b1928;
+  box-sizing: border-box;
+}
+
+/* ── Fullscreen Video Wrapper ── */
+.videoWrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.videoElement {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+/* Subtle gradient to enhance text contrast without obscuring the sky */
+.softOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(16, 48, 104, 0.45) 0%,
+    rgba(16, 48, 104, 0.08) 28%,
+    rgba(16, 48, 104, 0.12) 65%,
+    rgba(11, 25, 40, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Back Button (Top Left Floating) ── */
+.backBtn {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 0.8rem), 0.8rem);
+  left: 0.9rem;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(186, 230, 253, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(11, 25, 40, 0.2);
+  color: #103068;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backBtn:hover {
+  background: #ffffff;
+  border-color: #38bdf8;
+  transform: translateX(-2px);
+}
+
+.backArrowSvg {
+  width: 14px;
+  height: 14px;
+  stroke: #103068;
+  stroke-width: 2.5;
+}
+
+/* ── Top Header Area ── */
+.headerArea {
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  max-width: 480px;
+  margin-top: max(env(safe-area-inset-top, 3.2rem), 3.2rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.tagline {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #103068;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mainTitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(28px, 7vw, 42px);
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 14px rgba(16, 48, 104, 0.65);
+  margin: 0.15rem 0 0;
+}
+
+.subSubtitle {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(14px, 3.8vw, 18px);
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f0f7ff;
+  text-shadow: 0 1px 8px rgba(11, 25, 40, 0.6);
+  margin: 0;
+  padding: 0 0.5rem;
+}
+
+/* ── Bottom Floating Card Area ── */
+.bottomArea {
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  max-width: 460px;
+  margin-bottom: max(env(safe-area-inset-bottom, 1.4rem), 1.4rem);
+  display: flex;
+  justify-content: center;
+}
+
+.glassCard {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 12px 32px rgba(11, 25, 40, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.quoteText {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(14px, 3.8vw, 17px);
+  font-weight: 600;
+  color: #103068;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.exploreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.4rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #103068 0%, #1e5296 100%);
+  color: #ffffff;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(16, 48, 104, 0.35);
+  transition: all 0.25s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exploreBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 48, 104, 0.45);
+}
+
+.exploreBtn:active {
+  transform: scale(0.98);
+}
+
+.btnArrow {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.exploreBtn:hover .btnArrow {
+  transform: translateX(4px);
+}
