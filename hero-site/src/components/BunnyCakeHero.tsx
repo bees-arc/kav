@@ -147,8 +147,8 @@ export default function BunnyCakeHero({
 
         {/* Second Instruction Paragraph */}
         <p className={styles.lowerInstruction}>
-          Tap the button and watch<br />
-          your candles light up the room
+          Tap the button, blow out the light<br />
+          and wish for your dreams to take flight
         </p>
       </motion.div>
 
