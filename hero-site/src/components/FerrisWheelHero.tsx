@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { motion, useScroll, useSpring } from 'framer-motion';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import styles from './FerrisWheelHero.module.css';
 
 interface FerrisWheelHeroProps {
@@ -23,7 +23,7 @@ type HTMLVideoElementWithCallback = HTMLVideoElement & {
 const TARGET_FPS = 30; // 30 fps for 2-second video = ~60 frames
 const CAPTURE_SPEED = 2; // play at 2x speed for instant ~1s capture
 const CAPTURE_SCALE = 1.0; // full native 1080p crispness
-const WHEEL_REVOLUTIONS = 16; // 4 graceful full rotations across the entire letter scroll
+const WHEEL_REVOLUTIONS = 16; // dynamic visible rotations across the letter scroll
 
 export default function FerrisWheelHero({
   onBackClick,
@@ -49,6 +49,9 @@ export default function FerrisWheelHero({
     damping: 38,
     mass: 0.35,
   });
+
+  // Fade out scroll down arrow as user begins scrolling
+  const scrollHintOpacity = useTransform(scrollYProgress, [0, 0.035], [1, 0]);
 
   // ── Video Frame Capture ──
   const captureFrames = useCallback(async () => {
@@ -165,7 +168,6 @@ export default function FerrisWheelHero({
     const unsub = smoothProgress.on('change', (p) => {
       const total = framesRef.current.length;
       if (total > 0) {
-        // Continuous looping scrub across the total letter scroll
         const virtualFrame = p * WHEEL_REVOLUTIONS * (total - 1);
         const loopIdx = Math.round(virtualFrame) % (total - 1);
         frameIdxRef.current = Math.min(Math.max(loopIdx, 0), total - 1);
@@ -260,6 +262,28 @@ export default function FerrisWheelHero({
         <div className={styles.canvasOverlay} />
       </div>
 
+      {/* ── Floating Scroll Down Indicator (Fades out when user scrolls) ── */}
+      <motion.div
+        className={styles.scrollDownIndicator}
+        style={{ opacity: scrollHintOpacity }}
+        aria-hidden="true"
+      >
+        <span className={styles.scrollDownText}>Scroll down</span>
+        <motion.svg
+          className={styles.scrollDownSvg}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          animate={{ y: [0, 4, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+        >
+          <path d="M12 5v14M19 12l-7 7-7-7" />
+        </motion.svg>
+      </motion.div>
+
       {/* ── Floating Back Button (Top Left) ── */}
       {onBackClick && (
         <motion.button
@@ -296,7 +320,7 @@ export default function FerrisWheelHero({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Letter Header */}
+          {/* Main Letter Header */}
           <header className={styles.letterHeader}>
             <h1 className={styles.headerTitle}>My Beautiful Little Angel</h1>
             <div className={styles.heartDivider} aria-hidden="true">
@@ -306,147 +330,155 @@ export default function FerrisWheelHero({
             </div>
           </header>
 
-          {/* Letter Body Paragraphs with Highlighted Topics */}
+          {/* Letter Body Paragraphs Under the 4 Topics */}
           <div className={styles.letterBody}>
-            <p className={styles.letterPara}>One of the very first things I noticed about you, when I was just beginning to know you, was the kindness you carried in your heart.</p>
-
-            <p className={styles.letterPara}>The way you cared for others, the compassion you showed so naturally, and especially the love you had for animals.</p>
-
-            <p className={styles.letterPara}>I still remember something I thought to myself back then...</p>
-
-            <p className={styles.letterPara}>If this girl can give so much love to those who aren&apos;t even her own, I wonder how deeply she must love the people who truly belong in her heart.</p>
-
-            <p className={styles.letterPara}>And the more I got to know you, the more I realized just how beautiful that heart really is.</p>
-
-            <p className={styles.letterPara}>Someone who doesn&apos;t truly know you might misunderstand your kindness. They might think you&apos;re pretending, that you&apos;re simply too good to be real.</p>
-
-            <p className={styles.letterPara}>But I know you.</p>
-
-            <p className={styles.letterPara}>I&apos;ve seen the love behind your actions, the gentleness in your heart, and the way you care even when there&apos;s nothing for you to gain.</p>
-
-            <p className={styles.letterPara}>And if there&apos;s one thing I know with all my heart, it&apos;s this...</p>
-
-            <p className={styles.letterPara}>You&apos;re an angel who somehow found her way into this world.</p>
-
-            <p className={styles.letterPara}>Not because you&apos;re perfect, but because there&apos;s something so incredibly rare about a soul that chooses kindness so naturally.</p>
-
-            <p className={styles.letterPara}>And I hope you never lose that beautiful part of yourself.</p>
-
-            <p className={styles.letterPara}>You might not even realize it, but there&apos;s something incredibly beautiful about the way you simply exist.</p>
-
-            <p className={styles.letterPara}>Just as a sunflower turns toward the sunlight, my heart somehow always finds its way back to you.</p>
-
-            <p className={styles.letterPara}>It&apos;s in your little smiles, your innocent expressions, the way your eyes light up when something makes you happy, and all those tiny things you do without even noticing.</p>
-
-            <p className={styles.letterPara}>I&apos;ve fallen in love with so many little versions of you, and somehow, every day, I find another reason to love you even more.</p>
-
-            <p className={styles.letterPara}>And there&apos;s something I&apos;ve always thought whenever I looked at you...</p>
-
-            <p className={styles.letterPara}>This silly little girl of mine has such a beautiful heart. She&apos;s almost too good for this world. I just want to love her, protect her, and take care of her as gently as I possibly can.</p>
-
-            <p className={styles.letterPara}>Not because you&apos;re too fragile to face the world, but because someone with a heart like yours deserves to feel just as loved and cared for as the people she gives her love to.</p>
-
-            <p className={styles.letterPara}>I want you to bloom in every season of your life, to chase every little dream your heart holds, and to never feel that you have to become someone else to deserve love.</p>
-
-            <p className={styles.letterPara}>Because to me, the person you already are is someone incredibly precious.</p>
-
-            <p className={styles.letterPara}>Your beauty has never been just about your smile, your eyes, or the way you look.</p>
-
-            <p className={styles.letterPara}>It&apos;s in the beautiful heart you carry.</p>
-
-            <p className={styles.letterPara}>The love you give to animals, the kindness you show to people around you, and the way your heart cares even for the smallest, most innocent lives...</p>
-
-            <p className={styles.letterPara}>It&apos;s the way you love without expecting anything in return, the way you find happiness in making others feel loved, and the gentleness you carry in everything you do.</p>
-
-            <p className={styles.letterPara}>These are the little things that remind me how incredibly lucky I am to have someone like you in my life.</p>
-
-            <p className={styles.letterPara}>And you know something?</p>
-
-            <p className={styles.letterPara}>There were times when I was almost the complete opposite of you.</p>
-
-            <p className={styles.letterPara}>The way I saw certain things, the way I understood people, and even the way I thought about giving kindness to others...</p>
-
-            <p className={styles.letterPara}>We didn&apos;t always see the world in the same way.</p>
-
-            <p className={styles.letterPara}>But being with you slowly taught me something beautiful.</p>
-
-            <p className={styles.letterPara}>Love doesn&apos;t always mean being the same. Sometimes, it means becoming a better version of yourself because of the person beside you.</p>
-
-            <p className={styles.letterPara}>I began to understand the happiness you found in giving kindness to others.</p>
-
-            <p className={styles.letterPara}>Little by little, the things that made your heart happy started bringing happiness to mine, too.</p>
-
-            <p className={styles.letterPara}>And without even realizing it, I started seeing the world a little differently.</p>
-
-            <p className={styles.letterPara}>A little more gently.</p>
-
-            <p className={styles.letterPara}>A little more lovingly.</p>
-
-            <p className={styles.letterPara}>A little more like you.</p>
-
-            <p className={styles.letterPara}>You never had to ask me to change.</p>
-
-            <p className={styles.letterPara}>You simply loved the world in your own beautiful way, and somehow, that love began changing mine.</p>
-
-            <p className={styles.letterPara}>Before you became such a beautiful part of my life, there were pieces of me that I hadn&apos;t quite figured out.</p>
-
-            <p className={styles.letterPara}>Sometimes, I think of my life as an unfinished sculpture.</p>
-
-            <p className={styles.letterPara}>It had its shape, its imperfections, its rough edges, and so many little spaces that still felt empty.</p>
-
-            <p className={styles.letterPara}>And then you came along.</p>
-
-            <p className={styles.letterPara}>Not to erase who I was, or to turn me into someone completely different.</p>
-
-            <p className={styles.letterPara}>But somehow, with your love, your kindness, your laughter, and even your silly little ways, you began filling those empty spaces I hadn&apos;t even noticed before.</p>
-
-            <p className={styles.letterPara}>Little by little, the unfinished sculpture started feeling more complete.</p>
-
-            <p className={styles.letterPara}>And the most beautiful part?</p>
-
-            <p className={styles.letterPara}>You didn&apos;t just help shape that sculpture. You gave it a soul.</p>
-
-            <p className={styles.letterPara}>You brought warmth into places that had always felt cold.</p>
-
-            <p className={styles.letterPara}>You brought tenderness into parts of me that had forgotten what gentleness felt like.</p>
-
-            <p className={styles.letterPara}>And you brought a kind of love into my life that I never quite knew how to describe.</p>
-
-            <p className={styles.letterPara}>Sometimes, I wonder if you even realize how much of a difference you&apos;ve made in my world.</p>
-
-            <p className={styles.letterPara}>Because you didn&apos;t have to do anything extraordinary.</p>
-
-            <p className={styles.letterPara}>You were simply yourself.</p>
-
-            <p className={styles.letterPara}>And somehow, that was enough to make so many ordinary things feel beautiful.</p>
-
-            <p className={styles.letterPara}>There are still so many chapters of life ahead of us, so many things to learn, so many memories to make, and so many versions of ourselves we haven&apos;t met yet.</p>
-
-            <p className={styles.letterPara}>I don&apos;t know what every tomorrow will look like.</p>
-
-            <p className={styles.letterPara}>But I do know that the love you&apos;ve brought into my life is something I will always be grateful for.</p>
-
-            <p className={styles.letterPara}>And if I could tell you just one thing, it would be this...</p>
-
-            <p className={styles.letterPara}>No matter what people who don&apos;t truly know you might say, no matter how misunderstood your kindness may sometimes be, please never let the world convince you that your beautiful heart is something you need to hide.</p>
-
-            <p className={styles.letterPara}>Because I know the girl behind that smile.</p>
-
-            <p className={styles.letterPara}>I know how deeply she feels, how genuinely she cares, and how much love she carries within her.</p>
-
-            <p className={styles.letterPara}>And I will always see something beautiful in the parts of you that the world may never fully understand.</p>
-
-            <p className={styles.letterPara}>To others, you may be just another girl in this world.</p>
-
-            <p className={styles.letterPara}>But to me, you&apos;re the angel who brought a soul to my unfinished sculpture, warmth to my coldest places, and a little more love into everything I see.</p>
-
-            <p className={styles.letterPara}>And my sweet, silly girl...</p>
-
-            <p className={styles.letterPara}>If this world ever feels too heavy for a heart as gentle as yours, I hope you&apos;ll always find a little place of peace, warmth, and safety in my love.</p>
-
-            <p className={styles.letterPara}>Because you deserve every bit of the tenderness you&apos;ve spent your life giving to others.</p>
-
-            <p className={styles.letterPara}>And if there&apos;s one thing I will never doubt, it&apos;s that you truly are my beautiful little angel. 💙</p>
+            {/* ── Topic 1: A Heart for Every Soul ── */}
+            <div className={styles.topicHeader}>
+              <h2 className={styles.topicTitle}>A Heart for Every Soul</h2>
+              <div className={styles.topicDivider} aria-hidden="true">
+                <span className={styles.topicDividerLine} />
+                <span className={styles.topicDividerIcon}>🕊️</span>
+                <span className={styles.topicDividerLine} />
+              </div>
+            </div>
+
+            <p className={styles.letterPara}>
+              One of the very first things I noticed about you, when I was just beginning to know you, was the kindness you carried in your heart. The way you cared for others, the compassion you showed so naturally, and especially the love you had for animals.
+            </p>
+
+            <p className={styles.letterPara}>
+              I still remember something I thought to myself back then... If this girl can give so much love to those who aren&apos;t even her own, I wonder how deeply she must love the people who truly belong in her heart.
+            </p>
+
+            <p className={styles.letterPara}>
+              And the more I got to know you, the more I realized just how beautiful that heart really is. Someone who doesn&apos;t truly know you might misunderstand your kindness. They might think you&apos;re pretending, that you&apos;re simply too good to be real.
+            </p>
+
+            <p className={styles.letterPara}>
+              But I know you. I&apos;ve seen the love behind your actions, the gentleness in your heart, and the way you care even when there&apos;s nothing for you to gain. And if there&apos;s one thing I know with all my heart, it&apos;s this...
+            </p>
+
+            <p className={styles.highlightQuote}>
+              &ldquo;You&apos;re an angel who somehow found her way into this world.&rdquo;
+            </p>
+
+            <p className={styles.letterPara}>
+              Not because you&apos;re perfect, but because there&apos;s something so incredibly rare about a soul that chooses kindness so naturally. And I hope you never lose that beautiful part of yourself.
+            </p>
+
+            {/* ── Topic 2: The Way You Bloom ── */}
+            <div className={styles.topicHeader}>
+              <h2 className={styles.topicTitle}>The Way You Bloom</h2>
+              <div className={styles.topicDivider} aria-hidden="true">
+                <span className={styles.topicDividerLine} />
+                <span className={styles.topicDividerIcon}>🌻</span>
+                <span className={styles.topicDividerLine} />
+              </div>
+            </div>
+
+            <p className={styles.letterPara}>
+              You might not even realize it, but there&apos;s something incredibly beautiful about the way you simply exist. Just as a sunflower turns toward the sunlight, my heart somehow always finds its way back to you.
+            </p>
+
+            <p className={styles.letterPara}>
+              It&apos;s in your little smiles, your innocent expressions, the way your eyes light up when something makes you happy, and all those tiny things you do without even noticing. I&apos;ve fallen in love with so many little versions of you, and somehow, every day, I find another reason to love you even more.
+            </p>
+
+            <p className={styles.letterPara}>
+              And there&apos;s something I&apos;ve always thought whenever I looked at you... This silly little girl of mine has such a beautiful heart. She&apos;s almost too good for this world. I just want to love her, protect her, and take care of her as gently as I possibly can.
+            </p>
+
+            <p className={styles.letterPara}>
+              Not because you&apos;re too fragile to face the world, but because someone with a heart like yours deserves to feel just as loved and cared for as the people she gives her love to. I want you to bloom in every season of your life, to chase every little dream your heart holds, and to never feel that you have to become someone else to deserve love. Because to me, the person you already are is someone incredibly precious.
+            </p>
+
+            <p className={styles.letterPara}>
+              Your beauty has never been just about your smile, your eyes, or the way you look. It&apos;s in the beautiful heart you carry. The love you give to animals, the kindness you show to people around you, and the way your heart cares even for the smallest, most innocent lives...
+            </p>
+
+            <p className={styles.letterPara}>
+              It&apos;s the way you love without expecting anything in return, the way you find happiness in making others feel loved, and the gentleness you carry in everything you do. These are the little things that remind me how incredibly lucky I am to have someone like you in my life.
+            </p>
+
+            {/* ── Topic 3: A Beautiful Soul ── */}
+            <div className={styles.topicHeader}>
+              <h2 className={styles.topicTitle}>A Beautiful Soul</h2>
+              <div className={styles.topicDivider} aria-hidden="true">
+                <span className={styles.topicDividerLine} />
+                <span className={styles.topicDividerIcon}>✨</span>
+                <span className={styles.topicDividerLine} />
+              </div>
+            </div>
+
+            <p className={styles.letterPara}>
+              And you know something? There were times when I was almost the complete opposite of you. The way I saw certain things, the way I understood people, and even the way I thought about giving kindness to others... We didn&apos;t always see the world in the same way.
+            </p>
+
+            <p className={styles.letterPara}>
+              But being with you slowly taught me something beautiful. Love doesn&apos;t always mean being the same. Sometimes, it means becoming a better version of yourself because of the person beside you.
+            </p>
+
+            <p className={styles.letterPara}>
+              I began to understand the happiness you found in giving kindness to others. Little by little, the things that made your heart happy started bringing happiness to mine, too. And without even realizing it, I started seeing the world a little differently. A little more gently. A little more lovingly. A little more like you.
+            </p>
+
+            <p className={styles.letterPara}>
+              You never had to ask me to change. You simply loved the world in your own beautiful way, and somehow, that love began changing mine.
+            </p>
+
+            <p className={styles.letterPara}>
+              Before you became such a beautiful part of my life, there were pieces of me that I hadn&apos;t quite figured out. Sometimes, I think of my life as an unfinished sculpture. It had its shape, its imperfections, its rough edges, and so many little spaces that still felt empty.
+            </p>
+
+            <p className={styles.letterPara}>
+              And then you came along. Not to erase who I was, or to turn me into someone completely different. But somehow, with your love, your kindness, your laughter, and even your silly little ways, you began filling those empty spaces I hadn&apos;t even noticed before.
+            </p>
+
+            <p className={styles.letterPara}>
+              Little by little, the unfinished sculpture started feeling more complete. And the most beautiful part? You didn&apos;t just help shape that sculpture. You gave it a soul.
+            </p>
+
+            <p className={styles.letterPara}>
+              You brought warmth into places that had always felt cold. You brought tenderness into parts of me that had forgotten what gentleness felt like. And you brought a kind of love into my life that I never quite knew how to describe.
+            </p>
+
+            <p className={styles.letterPara}>
+              Sometimes, I wonder if you even realize how much of a difference you&apos;ve made in my world. Because you didn&apos;t have to do anything extraordinary. You were simply yourself. And somehow, that was enough to make so many ordinary things feel beautiful.
+            </p>
+
+            {/* ── Topic 4: A Journey I Want to Share With You ── */}
+            <div className={styles.topicHeader}>
+              <h2 className={styles.topicTitle}>A Journey I Want to Share With You</h2>
+              <div className={styles.topicDivider} aria-hidden="true">
+                <span className={styles.topicDividerLine} />
+                <span className={styles.topicDividerIcon}>💙</span>
+                <span className={styles.topicDividerLine} />
+              </div>
+            </div>
+
+            <p className={styles.letterPara}>
+              There are still so many chapters of life ahead of us, so many things to learn, so many memories to make, and so many versions of ourselves we haven&apos;t met yet. I don&apos;t know what every tomorrow will look like. But I do know that the love you&apos;ve brought into my life is something I will always be grateful for.
+            </p>
+
+            <p className={styles.letterPara}>
+              And if I could tell you just one thing, it would be this... No matter what people who don&apos;t truly know you might say, no matter how misunderstood your kindness may sometimes be, please never let the world convince you that your beautiful heart is something you need to hide.
+            </p>
+
+            <p className={styles.letterPara}>
+              Because I know the girl behind that smile. I know how deeply she feels, how genuinely she cares, and how much love she carries within her. And I will always see something beautiful in the parts of you that the world may never fully understand.
+            </p>
+
+            <p className={styles.letterPara}>
+              To others, you may be just another girl in this world. But to me, you&apos;re the angel who brought a soul to my unfinished sculpture, warmth to my coldest places, and a little more love into everything I see.
+            </p>
+
+            <p className={styles.closingPara}>
+              And my sweet, silly girl... If this world ever feels too heavy for a heart as gentle as yours, I hope you&apos;ll always find a little place of peace, warmth, and safety in my love. Because you deserve every bit of the tenderness you&apos;ve spent your life giving to others.
+            </p>
+
+            <p className={styles.finalAngelSign}>
+              And if there&apos;s one thing I will never doubt, it&apos;s that you truly are my beautiful little angel. 💙
+            </p>
           </div>
 
           {/* Letter Footer Heart Divider */}
