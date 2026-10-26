@@ -107,7 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           rel="preload"
           as="image"
-          href="/download%20(4).webp"
+          href="/Watercolour%20Blue%20Bow%20with%20Floating%20Hearts.webp"
           type="image/webp"
         />
         <script

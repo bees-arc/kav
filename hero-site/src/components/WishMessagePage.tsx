@@ -17,10 +17,10 @@ export default function WishMessagePage({
     <section className={styles.pageContainer} aria-label="Birthday Wish Letter for Kaawya">
       {/* ── Artwork Frame matching 675 x 1200 ratio ── */}
       <div className={styles.artworkFrame}>
-        {/* Full Frame Ribbon Background Image: download (4).webp */}
+        {/* Full Frame Watercolour Blue Bow with Floating Hearts Background */}
         <Image
-          src="/download (4).webp"
-          alt="Coquette Blue Ribbon Background"
+          src="/Watercolour Blue Bow with Floating Hearts.webp"
+          alt="Watercolour Blue Bow with Floating Hearts"
           fill
           priority
           sizes="(max-width: 768px) 100vw, 550px"
