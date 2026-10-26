@@ -9,29 +9,16 @@ interface NavbarProps {
 }
 
 export default function Navbar({ progress }: NavbarProps) {
-  const [scrolled, setScrolled] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const { scrollY, scrollYProgress: defaultScrollYProgress } = useScroll();
+  const { scrollYProgress: defaultScrollYProgress } = useScroll();
   const effectiveProgress = progress || defaultScrollYProgress;
 
   useEffect(() => {
-    if (progress) {
-      const unsub = progress.on('change', (p: number) => {
-        setScrolled(p > 0.04);
-        setIsComplete(p >= 0.96);
-      });
-      return () => unsub();
-    } else {
-      const unsubY = scrollY.on('change', (v: number) => setScrolled(v > 60));
-      const unsubProgress = defaultScrollYProgress.on('change', (p: number) => {
-        setIsComplete(p >= 0.96);
-      });
-      return () => {
-        unsubY();
-        unsubProgress();
-      };
-    }
-  }, [progress, scrollY, defaultScrollYProgress]);
+    const unsub = effectiveProgress.on('change', (p: number) => {
+      setIsComplete(p >= 0.96);
+    });
+    return () => unsub();
+  }, [effectiveProgress]);
 
   // Transform scroll progress (0 -> 1) into top clip percentage (100% -> 0%)
   const clipTop = useTransform(effectiveProgress, [0, 1], [100, 0]);
@@ -50,21 +37,16 @@ export default function Navbar({ progress }: NavbarProps) {
   );
 
   return (
-    <motion.nav
-      className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`}
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+    <motion.div
+      className={styles.floatingHeartBadge}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
     >
-      <span className={styles.logo}>🎂 Boo&apos;s 23</span>
-
-      <div className={styles.rightSection}>
-        <span className={styles.tagline}>Scroll to celebrate</span>
-
-        <div
-          className={`${styles.heartContainer} ${isComplete ? styles.heartBeating : ''}`}
-          title="Scroll progress"
-        >
+      <div
+        className={`${styles.heartContainer} ${isComplete ? styles.heartBeating : ''}`}
+        title="Birthday scroll progress"
+      >
           {/* Circular Progress Border Ring that completes with scroll */}
           <svg className={styles.heartRingSvg} viewBox="0 0 38 38">
             <defs>
@@ -143,7 +125,6 @@ export default function Navbar({ progress }: NavbarProps) {
             </motion.div>
           </div>
         </div>
-      </div>
-    </motion.nav>
-  );
-}
+      </motion.div>
+    );
+  }

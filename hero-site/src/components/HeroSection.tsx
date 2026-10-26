@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring, type MotionValue } from 'framer-motion';
 import Navbar from './Navbar';
 import styles from './HeroSection.module.css';
@@ -201,12 +200,6 @@ export default function HeroSection() {
   const rafRef       = useRef<number>(0);
   const [phase, setPhase]       = useState<'loading' | 'ready'>('loading');
   const [progress, setProgress] = useState(0);
-  const [showPopup, setShowPopup] = useState(false);
-  const popupTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const extraScrollCountRef = useRef(0);
-  const lastScrollTimeRef = useRef(0);
-  const touchStartYRef = useRef(0);
-
   // ── Scroll container progress
   const { scrollYProgress } = useScroll({
     container: containerRef,
@@ -217,89 +210,6 @@ export default function HeroSection() {
     mass: 0.12,
     restDelta: 0.0001,
   });
-
-  // ── Trigger popup: after 4s at end or if scrolled 3 more times at maximum scroll
-  useEffect(() => {
-    const triggerNow = () => {
-      if (popupTimerRef.current) {
-        clearTimeout(popupTimerRef.current);
-        popupTimerRef.current = null;
-      }
-      setShowPopup(true);
-    };
-
-    const unsub = scrollYProgress.on('change', (p) => {
-      if (p >= 0.95) {
-        if (!popupTimerRef.current && !showPopup) {
-          popupTimerRef.current = setTimeout(() => {
-            triggerNow();
-          }, 4000); // 4s fallback
-        }
-      } else if (p < 0.88) {
-        if (popupTimerRef.current) {
-          clearTimeout(popupTimerRef.current);
-          popupTimerRef.current = null;
-        }
-        extraScrollCountRef.current = 0;
-      }
-    });
-
-    const handleWheel = (e: WheelEvent) => {
-      if (showPopup) return;
-      const p = scrollYProgress.get();
-      if (p >= 0.95 && e.deltaY > 15) {
-        const now = Date.now();
-        if (now - lastScrollTimeRef.current > 180) {
-          extraScrollCountRef.current += 1;
-          lastScrollTimeRef.current = now;
-          if (extraScrollCountRef.current >= 3) {
-            triggerNow();
-          }
-        }
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        touchStartYRef.current = e.touches[0].clientY;
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (showPopup) return;
-      const p = scrollYProgress.get();
-      if (p >= 0.95 && e.changedTouches.length > 0) {
-        const delta = touchStartYRef.current - e.changedTouches[0].clientY;
-        if (delta > 25) { // swiping up to scroll down
-          const now = Date.now();
-          if (now - lastScrollTimeRef.current > 180) {
-            extraScrollCountRef.current += 1;
-            lastScrollTimeRef.current = now;
-            if (extraScrollCountRef.current >= 3) {
-              triggerNow();
-            }
-          }
-        }
-      }
-    };
-
-    const containerEl = containerRef.current;
-    if (containerEl) {
-      containerEl.addEventListener('wheel', handleWheel, { passive: true });
-      containerEl.addEventListener('touchstart', handleTouchStart, { passive: true });
-      containerEl.addEventListener('touchend', handleTouchEnd, { passive: true });
-    }
-
-    return () => {
-      unsub();
-      if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-      if (containerEl) {
-        containerEl.removeEventListener('wheel', handleWheel);
-        containerEl.removeEventListener('touchstart', handleTouchStart);
-        containerEl.removeEventListener('touchend', handleTouchEnd);
-      }
-    };
-  }, [scrollYProgress, showPopup]);
 
   // ── Frame capture
   const captureFrames = useCallback(async () => {
@@ -532,10 +442,8 @@ export default function HeroSection() {
       />
 
       <div className={styles.stickyFrame}>
-        {/* Synced top Navbar */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100, pointerEvents: 'auto' }}>
-          <Navbar progress={smooth} />
-        </div>
+        {/* Floating Completing Heart Indicator */}
+        <Navbar progress={smooth} />
 
         <canvas ref={canvasRef} className={styles.canvas} />
 
@@ -623,54 +531,6 @@ export default function HeroSection() {
         </motion.div>
 
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />
-
-        {/* ── Blurred backdrop & floating jelly popup above all layers ── */}
-        {showPopup && (
-          <div className={styles.popupBackdrop}>
-            <div
-              className={styles.popupBackdropBlur}
-              onClick={() => setShowPopup(false)}
-            />
-            <motion.div
-              className={styles.popupJellyModal}
-              initial={{ scale: 0.35, opacity: 0, y: 35 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ type: 'spring', damping: 14, stiffness: 220 }}
-            >
-              <button
-                type="button"
-                className={styles.popupCloseBtn}
-                onClick={() => setShowPopup(false)}
-                aria-label="Close"
-              >
-                ✕
-              </button>
-
-              <div className={styles.popupGleam} />
-              <div className={styles.popupPulseGlow} />
-
-              <span className={styles.popupBadge}>✨ SPECIAL FOR KAAWYA ✨</span>
-
-              <div className={styles.popupIconWrapper}>
-                <span className={styles.popupIcon}>💌</span>
-              </div>
-
-              <h2 className={styles.popupTitle}>
-                Kaawya, You Have a Special Secret Message!
-              </h2>
-
-              <p className={styles.popupDesc}>
-                A private birthday letter and romantic surprise has been left just for you.
-              </p>
-
-              <Link href="/special-message" className={styles.popupJellyActionBtn}>
-                <span>Click Here to Open 💕</span>
-                <span className={styles.popupArrow}>→</span>
-              </Link>
-            </motion.div>
-          </div>
-        )}
       </div>
 
       {/* Tall scroll track for smooth user scrubbing */}
