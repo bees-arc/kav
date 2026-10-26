@@ -92,30 +92,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link
-          rel="preload"
-          as="image"
-          href="/Dreamy%20Blue%20Birthday%20Bunny%20Cake.webp"
-          type="image/webp"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/Dreamy%20Underwater%20Reef%20Sanctuary.webp"
-          type="image/webp"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/Watercolour%20Blue%20Bow%20with%20Floating%20Hearts.webp"
-          type="image/webp"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
