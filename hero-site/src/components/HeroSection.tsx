@@ -149,48 +149,11 @@ const HEARTS = [
   { id: 19, e: '💓', l: '20%', d: '8.3s',  dur: '7s',   s: '1.2rem' },
 ];
 
-// ─── Individual word revealed smoothly with scroll progress ─────
-function ScrollWord({
-  text,
-  type = 'plain',
-  range,
-  progress,
-  emoji,
-}: {
-  text: string;
-  type?: 'plain' | 'shimmer' | 'blue' | 'rose' | 'birthday';
-  range: [number, number];
-  progress: MotionValue<number>;
-  emoji?: string;
-}) {
-  const [start, end] = range;
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const y       = useTransform(progress, [start, end], [20, 0]);
-  const scale   = useTransform(progress, [start, end], [0.88, 1]);
-
-  const typeClass =
-    type === 'shimmer'
-      ? styles.wordShimmer
-      : type === 'blue'
-      ? styles.wordBlue
-      : type === 'rose'
-      ? styles.wordRose
-      : type === 'birthday'
-      ? styles.wordBirthday
-      : styles.wordPlain;
-
-  return (
-    <motion.span
-      className={`${styles.scrollWord} ${typeClass}`}
-      style={{ opacity, y, scale }}
-    >
-      {text}
-      {emoji && <span className={styles.wordEmoji}>{emoji}</span>}
-    </motion.span>
-  );
+interface HeroSectionProps {
+  onBackClick?: () => void;
 }
 
-export default function HeroSection() {
+export default function HeroSection({ onBackClick }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
   const captureRef   = useRef<HTMLVideoElement>(null);
@@ -425,8 +388,6 @@ export default function HeroSection() {
   // ── Scroll transforms
   const hintOpacity  = useTransform(smooth, [0, 0.05], [1, 0]);
   const pinkOverlay  = useTransform(smooth, [0.68, 1],  [0, 0.55]);
-  const wishOpacity  = useTransform(smooth, [0.88, 0.98], [0, 1]);
-  const wishY        = useTransform(smooth, [0.88, 0.98], ['20px', '0px']);
   const barScaleX    = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
@@ -442,7 +403,20 @@ export default function HeroSection() {
       />
 
       <div className={styles.stickyFrame}>
-        {/* Floating Completing Heart Indicator */}
+        {/* Floating Back Button (top left) */}
+        {onBackClick && (
+          <button
+            type="button"
+            onClick={onBackClick}
+            className={styles.backButton}
+            aria-label="Go back to previous page"
+          >
+            <span className={styles.backArrow}>←</span>
+            <span>Back</span>
+          </button>
+        )}
+
+        {/* Floating Completing Heart Indicator (top right) */}
         <Navbar progress={smooth} />
 
         <canvas ref={canvasRef} className={styles.canvas} />
@@ -473,61 +447,28 @@ export default function HeroSection() {
           ))}
         </div>
 
-        {/* Animated word-by-word message loaded with scroll */}
-        <div className={styles.messageContainer}>
-          <motion.div
-            className={styles.badge}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-          >
+        {/* "With love ❤️" badge moved to bottom with "Scroll down ↓" indicator */}
+        <motion.div
+          className={styles.bottomLoveContainer}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          style={{ opacity: hintOpacity }}
+        >
+          <div className={styles.badge}>
             <span className={styles.badgeDot} />
             With love ❤️
-          </motion.div>
-
-          <div className={styles.phraseRow}>
-            <ScrollWord text="To" range={[0.03, 0.12]} progress={smooth} />
-            <ScrollWord text="My" range={[0.09, 0.18]} progress={smooth} />
           </div>
-
-          <div className={styles.phraseRow}>
-            <ScrollWord text="Rarest" type="shimmer" range={[0.17, 0.29]} progress={smooth} />
-            <ScrollWord text="and" range={[0.27, 0.37]} progress={smooth} />
-            <ScrollWord text="Prettiest" type="shimmer" range={[0.36, 0.49]} progress={smooth} />
+          <div className={styles.scrollDownIndicator}>
+            <span>Scroll down to celebrate</span>
+            <motion.span
+              className={styles.scrollDownArrow}
+              animate={{ y: [0, 4, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              ↓
+            </motion.span>
           </div>
-
-          <div className={styles.phraseRow}>
-            <ScrollWord text="Blue" type="blue" range={[0.48, 0.61]} progress={smooth} />
-            <ScrollWord text="Rose," type="rose" range={[0.59, 0.73]} progress={smooth} emoji="🌹" />
-          </div>
-
-          <h1 className={styles.phraseRowBirthday}>
-            <ScrollWord text="Happy" type="birthday" range={[0.70, 0.82]} progress={smooth} />
-            <ScrollWord text="Birthday" type="birthday" range={[0.79, 0.90]} progress={smooth} />
-            <ScrollWord text="Kaawya" type="birthday" range={[0.87, 0.98]} progress={smooth} emoji="🎂" />
-          </h1>
-
-          {/* Celebratory wish and sparkles reveal at end */}
-          <motion.div className={styles.finalWish} style={{ opacity: wishOpacity, y: wishY }}>
-            <div className={styles.birthdaySub}>
-              <p className={styles.bdMsg}>
-                Wishing you a day full of joy,<br />love & beautiful moments
-              </p>
-              <span className={styles.bdEmoji}>🎈</span>
-            </div>
-            <div className={styles.sparkles}>
-              {['✨', '⭐', '💫', '⭐', '✨'].map((s, i) => (
-                <span key={i} className={styles.sparkle} style={{ animationDelay: `${i * 0.18}s` }}>
-                  {s}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.div className={styles.scrollHint} style={{ opacity: hintOpacity }}>
-          <div className={styles.scrollLine} />
-          <span className={styles.scrollLabel}>scroll for you 💙</span>
         </motion.div>
 
         <motion.div className={styles.progressBar} style={{ scaleX: barScaleX }} />

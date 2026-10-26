@@ -183,7 +183,12 @@ export default function Home() {
             }}
           >
             <div id="original-hero" style={{ width: '100%', height: '100%' }}>
-              <HeroSection />
+              <HeroSection
+                onBackClick={() => {
+                  setDirection(-1);
+                  setCurrentStep('ferris');
+                }}
+              />
             </div>
           </motion.div>
         )}

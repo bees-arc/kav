@@ -60,6 +60,77 @@
   z-index: -1;
 }
 
+/* ── Floating Back Button ── */
+.backButton {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.05rem;
+  background: rgba(8, 0, 15, 0.55);
+  border: 1px solid rgba(255, 107, 157, 0.25);
+  border-radius: 9999px;
+  color: #fdf0f5;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  transition: all 0.25s ease;
+  pointer-events: auto;
+}
+
+.backButton:hover {
+  background: rgba(255, 107, 157, 0.22);
+  border-color: rgba(255, 107, 157, 0.5);
+  transform: translateX(-2px);
+}
+
+.backArrow {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* ── Lower With Love & Scroll Down Container ── */
+.bottomLoveContainer {
+  position: absolute;
+  bottom: 2.8rem;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  pointer-events: none;
+  text-align: center;
+}
+
+.scrollDownIndicator {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(253, 220, 235, 0.75);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.scrollDownArrow {
+  font-size: 0.85rem;
+  color: #ff6b9d;
+  display: inline-block;
+}
+
 /* ── Frame capture loading overlay ── */
 .captureOverlay {
   position: absolute;
