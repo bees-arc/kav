@@ -495,9 +495,9 @@ export default function FerrisWheelHero({
                 type="button"
                 className={styles.celebrateBtn}
                 onClick={onNextClick}
-                aria-label="Proceed to the grand celebration"
+                aria-label="Open your special birthday present"
               >
-                <span>Celebrate with Kaawya 💕</span>
+                <span>A Little Present for You 💝</span>
                 <span className={styles.btnArrow}>→</span>
               </button>
             </div>

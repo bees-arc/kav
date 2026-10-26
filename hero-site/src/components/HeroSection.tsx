@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring, type MotionValue } from 'framer-motion';
+import Navbar from './Navbar';
 import styles from './HeroSection.module.css';
 
 interface VideoFrameCallbackMetadata {
@@ -17,11 +18,114 @@ type HTMLVideoElementWithCallback = HTMLVideoElement & {
 };
 
 // ─── Capture config ──────────────────────────────────────
-const TARGET_FPS    = 24;   // frames/sec to capture
-const CAPTURE_SPEED = 4;    // play at 4× → 10 s video captured in ~2.5 s
+const TARGET_FPS    = 30;   // 30 fps for ultra-smooth frame scrubbing
+const CAPTURE_SPEED = 2;    // play at 2× speed for high reliability capture
 const CAPTURE_SCALE = 1.0;  // 100% crisp full native video resolution
-const UNLOCK_AT     = 0.20; // enable scrolling once 20% frames ready (~0.5 s)
+const UNLOCK_AT     = 0.10; // enable rendering as soon as initial frames arrive
 // ─────────────────────────────────────────────────────────
+
+// Module-level cache so frames persist across renders and can be pre-captured
+let cachedHeroFrames: (ImageBitmap | undefined)[] | null = null;
+let preloadPromise: Promise<(ImageBitmap | undefined)[]> | null = null;
+
+export function preloadHeroFrames(): Promise<(ImageBitmap | undefined)[]> {
+  if (typeof window === 'undefined') return Promise.resolve([]);
+  if (cachedHeroFrames && cachedHeroFrames.length > 0) return Promise.resolve(cachedHeroFrames);
+  if (preloadPromise) return preloadPromise;
+
+  preloadPromise = new Promise<(ImageBitmap | undefined)[]>((resolve) => {
+    const video = document.createElement('video');
+    video.src = '/hero.mp4';
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'auto';
+    video.style.position = 'fixed';
+    video.style.top = '0px';
+    video.style.left = '0px';
+    video.style.width = '16px';
+    video.style.height = '16px';
+    video.style.opacity = '0.01';
+    video.style.pointerEvents = 'none';
+    video.style.zIndex = '-999';
+    document.body.appendChild(video);
+
+    const cleanup = () => {
+      try {
+        video.pause();
+        video.remove();
+      } catch {}
+    };
+
+    video.addEventListener(
+      'loadedmetadata',
+      async () => {
+        const duration = video.duration || 10.04;
+        const totalFrames = Math.ceil(duration * TARGET_FPS);
+        const frames: (ImageBitmap | undefined)[] = new Array(totalFrames);
+
+        const oc = document.createElement('canvas');
+        oc.width = Math.round(video.videoWidth * CAPTURE_SCALE) || 720;
+        oc.height = Math.round(video.videoHeight * CAPTURE_SCALE) || 1280;
+        const ctx = oc.getContext('2d', { alpha: false });
+        if (!ctx) {
+          cleanup();
+          resolve([]);
+          return;
+        }
+
+        const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+
+        if (hasRVFC) {
+          video.playbackRate = CAPTURE_SPEED;
+          try {
+            await video.play();
+          } catch {
+            cleanup();
+            resolve([]);
+            return;
+          }
+
+          const onFrame = (_: DOMHighResTimeStamp, meta: { mediaTime: number }) => {
+            const pct = meta.mediaTime / duration;
+            const idx = Math.min(Math.round(pct * (totalFrames - 1)), totalFrames - 1);
+
+            if (!frames[idx]) {
+              ctx.drawImage(video, 0, 0, oc.width, oc.height);
+              createImageBitmap(oc).then((bmp) => {
+                frames[idx] = bmp;
+                if (idx > 0 && !frames[idx - 1]) frames[idx - 1] = bmp;
+              });
+            }
+
+            if (meta.mediaTime < duration - 0.05) {
+              (video as HTMLVideoElementWithCallback).requestVideoFrameCallback(onFrame);
+            } else {
+              video.pause();
+              setTimeout(() => {
+                for (let i = 1; i < frames.length; i++) {
+                  if (!frames[i] && frames[i - 1]) {
+                    frames[i] = frames[i - 1];
+                  }
+                }
+                cachedHeroFrames = frames;
+                cleanup();
+                resolve(frames);
+              }, 200);
+            }
+          };
+
+          (video as HTMLVideoElementWithCallback).requestVideoFrameCallback(onFrame);
+        } else {
+          cleanup();
+          resolve([]);
+        }
+      },
+      { once: true }
+    );
+  });
+
+  return preloadPromise;
+}
 
 const HEARTS = [
   { id: 0,  e: '💗', l: '3%',  d: '0s',    dur: '7s',   s: '1.5rem' },
@@ -103,14 +207,18 @@ export default function HeroSection() {
   const lastScrollTimeRef = useRef(0);
   const touchStartYRef = useRef(0);
 
-  // ── Scroll
+  // ── Scroll container progress
   const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
+    container: containerRef,
   });
-  const smooth = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.0001 });
+  const smooth = useSpring(scrollYProgress, {
+    stiffness: 280,
+    damping: 30,
+    mass: 0.12,
+    restDelta: 0.0001,
+  });
 
-  // ── Trigger popup: after 5s or if scrolled 3 more times at maximum scroll
+  // ── Trigger popup: after 4s at end or if scrolled 3 more times at maximum scroll
   useEffect(() => {
     const triggerNow = () => {
       if (popupTimerRef.current) {
@@ -125,7 +233,7 @@ export default function HeroSection() {
         if (!popupTimerRef.current && !showPopup) {
           popupTimerRef.current = setTimeout(() => {
             triggerNow();
-          }, 5000); // 5s fallback
+          }, 4000); // 4s fallback
         }
       } else if (p < 0.88) {
         if (popupTimerRef.current) {
@@ -175,21 +283,45 @@ export default function HeroSection() {
       }
     };
 
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    const containerEl = containerRef.current;
+    if (containerEl) {
+      containerEl.addEventListener('wheel', handleWheel, { passive: true });
+      containerEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+      containerEl.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
 
     return () => {
       unsub();
       if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-      window.removeEventListener('wheel', handleWheel);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
+      if (containerEl) {
+        containerEl.removeEventListener('wheel', handleWheel);
+        containerEl.removeEventListener('touchstart', handleTouchStart);
+        containerEl.removeEventListener('touchend', handleTouchEnd);
+      }
     };
   }, [scrollYProgress, showPopup]);
 
   // ── Frame capture
   const captureFrames = useCallback(async () => {
+    // 1. Check if module-level cache already has complete frames
+    if (cachedHeroFrames && cachedHeroFrames.length > 0) {
+      framesRef.current = cachedHeroFrames;
+      setPhase('ready');
+      setProgress(100);
+      return;
+    }
+
+    // 2. If background preloader is already capturing, wait for it
+    if (preloadPromise) {
+      const preloaded = await preloadPromise;
+      if (preloaded && preloaded.length > 0) {
+        framesRef.current = preloaded;
+        setPhase('ready');
+        setProgress(100);
+        return;
+      }
+    }
+
     const video = captureRef.current;
     if (!video) return;
 
@@ -199,23 +331,22 @@ export default function HeroSection() {
       video.addEventListener('loadedmetadata', () => res(), { once: true });
     });
 
-    const duration    = video.duration;
+    const duration    = video.duration || 10.04;
     const totalFrames = Math.ceil(duration * TARGET_FPS);
     const frames: (ImageBitmap | undefined)[] = new Array(totalFrames);
     let captured = 0;
     let unlocked = false;
 
-    // Half-res offscreen canvas — way faster than full-res
     const oc  = document.createElement('canvas');
-    oc.width  = Math.round(video.videoWidth  * CAPTURE_SCALE);
-    oc.height = Math.round(video.videoHeight * CAPTURE_SCALE);
+    oc.width  = Math.round(video.videoWidth  * CAPTURE_SCALE) || 720;
+    oc.height = Math.round(video.videoHeight * CAPTURE_SCALE) || 1280;
     const ctx = oc.getContext('2d', { alpha: false })!;
 
     const tryUnlock = () => {
       setProgress(Math.round((captured / totalFrames) * 100));
-      if (!unlocked && captured >= totalFrames * UNLOCK_AT) {
+      if (!unlocked && captured >= Math.max(2, totalFrames * UNLOCK_AT)) {
         unlocked = true;
-        framesRef.current = frames; // share sparse array — draw loop handles gaps
+        framesRef.current = frames;
         setPhase('ready');
       }
     };
@@ -223,10 +354,13 @@ export default function HeroSection() {
     const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
 
     if (hasRVFC) {
-      // ── FAST PATH: play at 4× speed, capture via requestVideoFrameCallback
-      // 10 s video → ~2.5 s capture. No seek overhead at all.
       video.playbackRate = CAPTURE_SPEED;
-      video.play();
+      video.muted = true;
+      try {
+        await video.play();
+      } catch (err) {
+        console.warn('Autoplay prevented on video capture', err);
+      }
 
       await new Promise<void>((done) => {
         const onFrame = (_: DOMHighResTimeStamp, meta: { mediaTime: number }) => {
@@ -235,10 +369,10 @@ export default function HeroSection() {
 
           if (!frames[idx]) {
             ctx.drawImage(video, 0, 0, oc.width, oc.height);
-            // Fire-and-forget — createImageBitmap is ~instant (GPU copy)
             createImageBitmap(oc).then((bmp) => {
               frames[idx] = bmp;
               captured++;
+              if (idx > 0 && !frames[idx - 1]) frames[idx - 1] = bmp;
               tryUnlock();
             });
           }
@@ -247,13 +381,19 @@ export default function HeroSection() {
             (video as HTMLVideoElementWithCallback).requestVideoFrameCallback(onFrame);
           } else {
             video.pause();
-            // Brief wait for any in-flight createImageBitmap promises
             setTimeout(() => {
+              // Fill all remaining gaps so every index is valid
+              for (let i = 1; i < frames.length; i++) {
+                if (!frames[i] && frames[i - 1]) {
+                  frames[i] = frames[i - 1];
+                }
+              }
               framesRef.current = frames;
+              cachedHeroFrames = frames;
               setPhase('ready');
               setProgress(100);
               done();
-            }, 400);
+            }, 200);
           }
         };
 
@@ -261,8 +401,8 @@ export default function HeroSection() {
       });
 
     } else {
-      // ── FALLBACK: seek-based at 12 fps (older browsers)
-      const FFPS  = 12;
+      // Seek fallback
+      const FFPS  = 15;
       const ftotal = Math.ceil(duration * FFPS);
       const fframes: (ImageBitmap | undefined)[] = new Array(ftotal);
       let fcap = 0, funlocked = false;
@@ -284,6 +424,7 @@ export default function HeroSection() {
         }
       }
       framesRef.current = fframes;
+      cachedHeroFrames = fframes;
       setPhase('ready');
       setProgress(100);
     }
@@ -304,63 +445,72 @@ export default function HeroSection() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
-      if (w === 0 || h === 0) return;       // skip until layout is ready
+      if (w === 0 || h === 0) return;
       canvas.width  = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      lastIdx = -1;                          // force redraw on resize
+      lastIdx = -1;
     };
     setSize();
     const obs = new ResizeObserver(setSize);
     obs.observe(canvas);
 
-    const unsub = scrollYProgress.on('change', (p) => {
+    const unsub = smooth.on('change', (p) => {
       const total = framesRef.current.length;
-      if (total > 0) frameIdxRef.current = Math.min(Math.round(p * (total - 1)), total - 1);
+      if (total > 0) {
+        const targetIdx = Math.min(Math.round(p * (total - 1)), total - 1);
+        frameIdxRef.current = Math.max(0, targetIdx);
+      }
     });
 
     const draw = () => {
-      // If canvas not sized yet, retry next frame
-      if (canvas.width === 0 || canvas.height === 0) { setSize(); rafRef.current = requestAnimationFrame(draw); return; }
+      if (canvas.width === 0 || canvas.height === 0) {
+        setSize();
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
 
-      let idx = frameIdxRef.current;
       const frames = framesRef.current;
+      const total = frames.length;
 
-      // If slot not yet captured, search nearest available frame (backward, then forward)
-      if (!frames[idx]) {
-        for (let i = idx - 1; i >= 0; i--) {
-          if (frames[i]) { idx = i; break; }
+      if (total > 0) {
+        let idx = frameIdxRef.current;
+        if (idx >= total) idx = total - 1;
+        if (idx < 0) idx = 0;
+
+        // Search nearest available frame if gap exists
+        while (idx > 0 && !frames[idx]) {
+          idx--;
         }
-        if (!frames[idx]) {
-          for (let i = idx + 1; i < frames.length; i++) {
-            if (frames[i]) { idx = i; break; }
+
+        const bmp = frames[idx] || frames[0];
+        if (bmp && idx !== lastIdx) {
+          const cw = canvas.width;
+          const ch = canvas.height;
+          const ir = bmp.width / bmp.height;
+          const cr = cw / ch;
+          let sw = cw, sh = ch, sx = 0, sy = 0;
+          if (ir > cr) {
+            sw = ch * ir;
+            sx = -(sw - cw) / 2;
+          } else {
+            sh = cw / ir;
+            sy = -(sh - ch) / 2;
           }
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(bmp, sx, sy, sw, sh);
+          lastIdx = idx;
         }
       }
 
-      const bmp = frames[idx];
-      if (bmp && idx !== lastIdx) {
-        // ── Use canvas.width/height (physical pixels) — matches the buffer exactly
-        const cw = canvas.width;
-        const ch = canvas.height;
-        // Cover-fit: scale bmp to fill canvas, crop excess
-        const ir = bmp.width / bmp.height;  // image ratio
-        const cr = cw / ch;                 // canvas ratio
-        let sw = cw, sh = ch, sx = 0, sy = 0;
-        if (ir > cr) { sw = ch * ir; sx = -(sw - cw) / 2; }  // wider than canvas → crop sides
-        else         { sh = cw / ir; sy = -(sh - ch) / 2; }  // taller than canvas → crop top/bottom
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(bmp, sx, sy, sw, sh);
-        lastIdx = idx;
-      }
       rafRef.current = requestAnimationFrame(draw);
     };
     rafRef.current = requestAnimationFrame(draw);
 
     return () => { unsub(); cancelAnimationFrame(rafRef.current); obs.disconnect(); };
-  }, [scrollYProgress]);
+  }, [smooth]);
 
   // ── Scroll transforms
   const hintOpacity  = useTransform(smooth, [0, 0.05], [1, 0]);
@@ -370,15 +520,26 @@ export default function HeroSection() {
   const barScaleX    = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
-    <section ref={containerRef} className={styles.scrollContainer}>
+    <div ref={containerRef} className={styles.scrollContainer}>
       {/* Hidden video — capture source only, never shown */}
-      <video ref={captureRef} src="/hero.mp4" muted playsInline preload="auto"
-        className={styles.hiddenVideo} />
+      <video
+        ref={captureRef}
+        src="/hero.mp4"
+        muted
+        playsInline
+        preload="auto"
+        className={styles.hiddenVideo}
+      />
 
       <div className={styles.stickyFrame}>
+        {/* Synced top Navbar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100, pointerEvents: 'auto' }}>
+          <Navbar progress={smooth} />
+        </div>
+
         <canvas ref={canvasRef} className={styles.canvas} />
 
-        {/* Loading overlay — disappears as soon as 20% frames ready */}
+        {/* Loading overlay — disappears as soon as frames ready */}
         {phase === 'loading' && (
           <div className={styles.captureOverlay}>
             <div className={styles.captureBox}>
@@ -511,6 +672,9 @@ export default function HeroSection() {
           </div>
         )}
       </div>
-    </section>
+
+      {/* Tall scroll track for smooth user scrubbing */}
+      <div className={styles.scrollTrack} />
+    </div>
   );
 }

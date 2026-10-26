@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import Navbar from '@/components/Navbar';
 import SanctuaryHero from '@/components/SanctuaryHero';
 import BunnyCakeHero from '@/components/BunnyCakeHero';
 import WishMessagePage from '@/components/WishMessagePage';
 import FerrisWheelHero from '@/components/FerrisWheelHero';
-import HeroSection from '@/components/HeroSection';
+import HeroSection, { preloadHeroFrames } from '@/components/HeroSection';
 
 type PageStep = 'sanctuary' | 'cake' | 'wish' | 'ferris' | 'experience';
 
@@ -15,19 +14,19 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState<PageStep>('sanctuary');
   const [direction, setDirection] = useState<1 | -1>(1);
 
-  // Lock body scroll on the full-screen interactive pages
+  // Pre-capture hero video frames in background while user views initial pages
   useEffect(() => {
-    if (currentStep !== 'experience') {
-      document.body.style.overflow = 'hidden';
-      window.scrollTo(0, 0);
-    } else {
-      document.body.style.overflow = '';
-      window.scrollTo(0, 0);
-    }
+    preloadHeroFrames();
+  }, []);
+
+  // Lock body scroll so each step manages its own clean viewport
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    window.scrollTo(0, 0);
     return () => {
       document.body.style.overflow = '';
     };
-  }, [currentStep]);
+  }, []);
 
   return (
     <main style={{ position: 'relative', overflowX: 'hidden', minHeight: '100dvh' }}>
@@ -170,12 +169,20 @@ export default function Home() {
         {currentStep === 'experience' && (
           <motion.div
             key="step-experience"
-            initial={{ opacity: 0, y: 40, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              width: '100%',
+              height: '100dvh',
+              overflow: 'hidden',
+              backgroundColor: '#08000f',
+            }}
           >
-            <Navbar />
-            <div id="original-hero">
+            <div id="original-hero" style={{ width: '100%', height: '100%' }}>
               <HeroSection />
             </div>
           </motion.div>

@@ -1,32 +1,45 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+interface NavbarProps {
+  progress?: MotionValue<number>;
+}
+
+export default function Navbar({ progress }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-  const { scrollY, scrollYProgress } = useScroll();
+  const { scrollY, scrollYProgress: defaultScrollYProgress } = useScroll();
+  const effectiveProgress = progress || defaultScrollYProgress;
 
   useEffect(() => {
-    const unsubY = scrollY.on('change', (v) => setScrolled(v > 60));
-    const unsubProgress = scrollYProgress.on('change', (p) => {
-      setIsComplete(p >= 0.96);
-    });
-    return () => {
-      unsubY();
-      unsubProgress();
-    };
-  }, [scrollY, scrollYProgress]);
+    if (progress) {
+      const unsub = progress.on('change', (p: number) => {
+        setScrolled(p > 0.04);
+        setIsComplete(p >= 0.96);
+      });
+      return () => unsub();
+    } else {
+      const unsubY = scrollY.on('change', (v: number) => setScrolled(v > 60));
+      const unsubProgress = defaultScrollYProgress.on('change', (p: number) => {
+        setIsComplete(p >= 0.96);
+      });
+      return () => {
+        unsubY();
+        unsubProgress();
+      };
+    }
+  }, [progress, scrollY, defaultScrollYProgress]);
 
   // Transform scroll progress (0 -> 1) into top clip percentage (100% -> 0%)
-  const clipTop = useTransform(scrollYProgress, [0, 1], [100, 0]);
+  const clipTop = useTransform(effectiveProgress, [0, 1], [100, 0]);
   const clipPath = useTransform(clipTop, (val) => `inset(${val}% 0% 0% 0%)`);
 
   // Heart glow intensifies as it fills up with red
   const heartGlow = useTransform(
-    scrollYProgress,
+    effectiveProgress,
     [0, 0.4, 0.8, 1],
     [
       'drop-shadow(0 0 0px rgba(255, 23, 68, 0))',
@@ -81,7 +94,7 @@ export default function Navbar() {
               stroke="url(#navRingGrad)"
               strokeWidth="2.4"
               strokeLinecap="round"
-              style={{ pathLength: scrollYProgress }}
+              style={{ pathLength: effectiveProgress }}
               transform="rotate(-90 19 19)"
             />
           </svg>
