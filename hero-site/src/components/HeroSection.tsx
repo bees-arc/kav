@@ -126,28 +126,106 @@ export function preloadHeroFrames(): Promise<(ImageBitmap | undefined)[]> {
   return preloadPromise;
 }
 
-const HEARTS = [
-  { id: 0,  e: '💗', l: '3%',  d: '0s',    dur: '7s',   s: '1.5rem' },
-  { id: 1,  e: '💕', l: '9%',  d: '2.1s',  dur: '6s',   s: '1.1rem' },
-  { id: 2,  e: '💖', l: '17%', d: '0.5s',  dur: '8.5s', s: '1.8rem' },
-  { id: 3,  e: '❤️', l: '25%', d: '3.5s',  dur: '5.5s', s: '1.0rem' },
-  { id: 4,  e: '💓', l: '33%', d: '1.2s',  dur: '7.5s', s: '1.3rem' },
-  { id: 5,  e: '💝', l: '41%', d: '4.8s',  dur: '6.5s', s: '1.7rem' },
-  { id: 6,  e: '🩷', l: '48%', d: '0.8s',  dur: '5.5s', s: '1.2rem' },
-  { id: 7,  e: '💗', l: '55%', d: '2.8s',  dur: '9s',   s: '1.4rem' },
-  { id: 8,  e: '💕', l: '63%', d: '1.6s',  dur: '6s',   s: '1.0rem' },
-  { id: 9,  e: '💖', l: '71%', d: '3.2s',  dur: '7s',   s: '1.7rem' },
-  { id: 10, e: '❤️', l: '79%', d: '0.3s',  dur: '5.5s', s: '1.2rem' },
-  { id: 11, e: '💓', l: '86%', d: '4.1s',  dur: '6.5s', s: '1.5rem' },
-  { id: 12, e: '💝', l: '92%', d: '1.9s',  dur: '8s',   s: '1.1rem' },
-  { id: 13, e: '🩷', l: '97%', d: '3.7s',  dur: '7s',   s: '1.3rem' },
-  { id: 14, e: '💗', l: '13%', d: '5.5s',  dur: '6s',   s: '0.9rem' },
-  { id: 15, e: '💕', l: '58%', d: '6.2s',  dur: '7.5s', s: '1.6rem' },
-  { id: 16, e: '💖', l: '74%', d: '2.5s',  dur: '5s',   s: '1.3rem' },
-  { id: 17, e: '❤️', l: '37%', d: '7.1s',  dur: '8s',   s: '1.1rem' },
-  { id: 18, e: '🩷', l: '50%', d: '5.0s',  dur: '6.5s', s: '1.4rem' },
-  { id: 19, e: '💓', l: '20%', d: '8.3s',  dur: '7s',   s: '1.2rem' },
+interface HeartConfig {
+  id: number;
+  e: string;
+  l: string;
+  s: string;
+  startP: number;
+  endP: number;
+  rStart: number;
+  rEnd: number;
+  dur: string;
+  delay: string;
+}
+
+const HEARTS: HeartConfig[] = [
+  { id: 0,  e: '💗', l: '4%',  s: '1.4rem', startP: 0.00, endP: 0.35, rStart: -12, rEnd: 15,  dur: '6s',   delay: '0s' },
+  { id: 1,  e: '💕', l: '10%', s: '1.1rem', startP: 0.05, endP: 0.40, rStart: 10,  rEnd: -10, dur: '5.5s', delay: '0.8s' },
+  { id: 2,  e: '💖', l: '18%', s: '1.7rem', startP: 0.10, endP: 0.48, rStart: -8,  rEnd: 20,  dur: '7s',   delay: '1.5s' },
+  { id: 3,  e: '❤️', l: '26%', s: '1.0rem', startP: 0.15, endP: 0.52, rStart: 15,  rEnd: -15, dur: '5s',   delay: '0.3s' },
+  { id: 4,  e: '💓', l: '34%', s: '1.3rem', startP: 0.20, endP: 0.58, rStart: -15, rEnd: 12,  dur: '6.5s', delay: '2.1s' },
+  { id: 5,  e: '💝', l: '42%', s: '1.6rem', startP: 0.25, endP: 0.65, rStart: 8,   rEnd: -20, dur: '6s',   delay: '1.2s' },
+  { id: 6,  e: '🩷', l: '50%', s: '1.2rem', startP: 0.30, endP: 0.70, rStart: -20, rEnd: 10,  dur: '5.5s', delay: '2.8s' },
+  { id: 7,  e: '💗', l: '58%', s: '1.4rem', startP: 0.35, endP: 0.75, rStart: 12,  rEnd: -12, dur: '7s',   delay: '0.5s' },
+  { id: 8,  e: '💕', l: '66%', s: '1.0rem', startP: 0.40, endP: 0.80, rStart: -10, rEnd: 18,  dur: '5s',   delay: '1.9s' },
+  { id: 9,  e: '💖', l: '74%', s: '1.7rem', startP: 0.45, endP: 0.85, rStart: 16,  rEnd: -14, dur: '6.5s', delay: '0.2s' },
+  { id: 10, e: '❤️', l: '82%', s: '1.2rem', startP: 0.50, endP: 0.90, rStart: -14, rEnd: 16,  dur: '5.5s', delay: '3.1s' },
+  { id: 11, e: '💓', l: '90%', s: '1.5rem', startP: 0.55, endP: 0.95, rStart: 10,  rEnd: -18, dur: '6s',   delay: '1.6s' },
+  { id: 12, e: '💝', l: '96%', s: '1.1rem', startP: 0.60, endP: 1.00, rStart: -18, rEnd: 14,  dur: '7s',   delay: '2.4s' },
+  { id: 13, e: '💗', l: '8%',  s: '1.3rem', startP: 0.22, endP: 0.62, rStart: -10, rEnd: 15,  dur: '5.8s', delay: '3.5s' },
+  { id: 14, e: '💕', l: '22%', s: '1.5rem', startP: 0.38, endP: 0.78, rStart: 12,  rEnd: -16, dur: '6.2s', delay: '0.9s' },
+  { id: 15, e: '💖', l: '38%', s: '1.2rem', startP: 0.48, endP: 0.88, rStart: -15, rEnd: 10,  dur: '5.4s', delay: '2.7s' },
+  { id: 16, e: '❤️', l: '54%', s: '1.4rem', startP: 0.58, endP: 0.98, rStart: 18,  rEnd: -12, dur: '6.8s', delay: '1.1s' },
+  { id: 17, e: '🩷', l: '68%', s: '1.6rem', startP: 0.18, endP: 0.58, rStart: -12, rEnd: 18,  dur: '5.6s', delay: '3.8s' },
+  { id: 18, e: '💓', l: '84%', s: '1.1rem', startP: 0.28, endP: 0.68, rStart: 14,  rEnd: -14, dur: '7.2s', delay: '0.4s' },
+  { id: 19, e: '💝', l: '14%', s: '1.3rem', startP: 0.52, endP: 0.92, rStart: -16, rEnd: 12,  dur: '6s',   delay: '2.0s' },
+  { id: 20, e: '💗', l: '46%', s: '1.5rem', startP: 0.08, endP: 0.48, rStart: 10,  rEnd: -15, dur: '5.2s', delay: '1.7s' },
+  { id: 21, e: '💕', l: '62%', s: '1.2rem', startP: 0.62, endP: 1.00, rStart: -14, rEnd: 16,  dur: '6.6s', delay: '3.0s' },
+  { id: 22, e: '💖', l: '78%', s: '1.4rem', startP: 0.32, endP: 0.72, rStart: 16,  rEnd: -10, dur: '5.9s', delay: '0.7s' },
+  { id: 23, e: '❤️', l: '30%', s: '1.6rem', startP: 0.65, endP: 1.00, rStart: -12, rEnd: 14,  dur: '6.4s', delay: '2.5s' },
 ];
+
+function ScrollDrivenHeart({
+  heart,
+  progress,
+  isEnded,
+}: {
+  heart: HeartConfig;
+  progress: MotionValue<number>;
+  isEnded: boolean;
+}) {
+  const y = useTransform(progress, [heart.startP, heart.endP], ['105vh', '-15vh']);
+  const opacity = useTransform(
+    progress,
+    [heart.startP, heart.startP + 0.04, heart.endP - 0.05, heart.endP],
+    [0, 1, 1, 0]
+  );
+  const scale = useTransform(
+    progress,
+    [heart.startP, heart.startP + 0.1, heart.endP],
+    [0.75, 1.15, 0.85]
+  );
+  const rotate = useTransform(
+    progress,
+    [heart.startP, heart.endP],
+    [heart.rStart, heart.rEnd]
+  );
+
+  if (isEnded) {
+    return (
+      <span
+        key={heart.id}
+        className={styles.heartCelebration}
+        style={{
+          left: heart.l,
+          animationDelay: heart.delay,
+          animationDuration: heart.dur,
+          fontSize: heart.s,
+        }}
+      >
+        {heart.e}
+      </span>
+    );
+  }
+
+  return (
+    <motion.span
+      key={heart.id}
+      className={styles.heartScrollDriven}
+      style={{
+        left: heart.l,
+        fontSize: heart.s,
+        y,
+        opacity,
+        scale,
+        rotate,
+      }}
+    >
+      {heart.e}
+    </motion.span>
+  );
+}
 
 interface HeroSectionProps {
   onBackClick?: () => void;
@@ -173,6 +251,15 @@ export default function HeroSection({ onBackClick }: HeroSectionProps) {
     mass: 0.12,
     restDelta: 0.0001,
   });
+
+  const [isEnded, setIsEnded] = useState(false);
+
+  useEffect(() => {
+    const unsub = smooth.on('change', (p: number) => {
+      setIsEnded(p >= 0.93);
+    });
+    return () => unsub();
+  }, [smooth]);
 
   // ── Frame capture
   const captureFrames = useCallback(async () => {
@@ -440,10 +527,12 @@ export default function HeroSection({ onBackClick }: HeroSectionProps) {
 
         <div className={styles.heartsLayer} aria-hidden="true">
           {HEARTS.map((h) => (
-            <span key={h.id} className={styles.heart}
-              style={{ left: h.l, animationDelay: h.d, animationDuration: h.dur, fontSize: h.s }}>
-              {h.e}
-            </span>
+            <ScrollDrivenHeart
+              key={h.id}
+              heart={h}
+              progress={smooth}
+              isEnded={isEnded}
+            />
           ))}
         </div>
 
@@ -460,7 +549,7 @@ export default function HeroSection({ onBackClick }: HeroSectionProps) {
             With love ❤️
           </div>
           <div className={styles.scrollDownIndicator}>
-            <span>Scroll down to celebrate</span>
+            <span>Scroll down to unwrap your present 🎁</span>
             <motion.span
               className={styles.scrollDownArrow}
               animate={{ y: [0, 4, 0] }}
