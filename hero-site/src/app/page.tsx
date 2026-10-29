@@ -1,18 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import SanctuaryHero from '@/components/SanctuaryHero';
 import BunnyCakeHero from '@/components/BunnyCakeHero';
 import WishMessagePage from '@/components/WishMessagePage';
 import FerrisWheelHero from '@/components/FerrisWheelHero';
 import HeroSection, { preloadHeroFrames } from '@/components/HeroSection';
+import CountdownPage, { UNLOCK_TIME } from '@/components/CountdownPage';
 
 type PageStep = 'sanctuary' | 'cake' | 'wish' | 'ferris' | 'experience';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState<PageStep>('sanctuary');
   const [direction, setDirection] = useState<1 | -1>(1);
+  // null = not yet checked (avoids hydration mismatch)
+  const [unlocked, setUnlocked] = useState<boolean | null>(null);
+  const handleUnlock = useCallback(() => setUnlocked(true), []);
+
+  useEffect(() => {
+    setUnlocked(Date.now() >= UNLOCK_TIME);
+  }, []);
 
   // Pre-capture hero video frames in background while user views initial pages
   useEffect(() => {
@@ -27,6 +35,14 @@ export default function Home() {
       document.body.style.overflow = '';
     };
   }, []);
+
+  if (unlocked === null) {
+    return <main style={{ minHeight: '100dvh', background: '#0b1928' }} />;
+  }
+
+  if (!unlocked) {
+    return <CountdownPage onComplete={handleUnlock} />;
+  }
 
   return (
     <main style={{ position: 'relative', overflowX: 'hidden', minHeight: '100dvh' }}>
