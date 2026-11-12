@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next';
+﻿import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -46,11 +46,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/bunny-favicon.jpg', type: 'image/jpeg' },
-      { url: '/bunny-favicon.jpg', sizes: '32x32', type: 'image/jpeg' },
+      { url: '/bunny-favicon.png', type: 'image/png' },
+      { url: '/bunny-favicon.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/bunny-favicon.jpg', sizes: '180x180', type: 'image/jpeg' },
+      { url: '/bunny-favicon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
 };
