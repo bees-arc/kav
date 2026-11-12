@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
@@ -322,7 +322,7 @@ export default function FerrisWheelHero({
         >
           {/* Main Letter Header */}
           <header className={styles.letterHeader}>
-            <h1 className={styles.headerTitle}>My Beautiful Little Angel</h1>
+            <h2 className={styles.headerTitle}>My Beautiful Little Angel</h2>
             <div className={styles.heartDivider} aria-hidden="true">
               <span className={styles.dividerLine} />
               <span className={styles.dividerHeart}>💙</span>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -65,7 +65,7 @@ export default function WishMessagePage({
         >
           {/* Titles Group */}
           <div className={styles.titleGroup}>
-            <h1 className={styles.happiestText}>Happiest</h1>
+            <h2 className={styles.happiestText}>Happiest</h2>
 
             <div className={styles.birthdayScriptWrap}>
               <span className={styles.birthdayScript}>Birthday,</span>

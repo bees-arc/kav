@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import styles from './CountdownPage.module.css';
@@ -44,7 +44,7 @@ export default function CountdownPage({ onComplete }: CountdownPageProps) {
       <div className={styles.glow} aria-hidden="true" />
       <div className={styles.content}>
         <div className={styles.heart} aria-hidden="true">💙</div>
-        <h1 className={styles.title}>Something special is coming…</h1>
+        <h2 className={styles.title}>Something special is coming…</h2>
         <p className={styles.subtitle}>Opens on 13th November at midnight</p>
 
         <div className={styles.grid}>

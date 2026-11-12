@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -134,7 +134,7 @@ export default function BunnyCakeHero({
 
         {/* Main "Make a Wish" Calligraphy */}
         <div className={styles.wishTitleWrap}>
-          <h1 className={styles.wishTitle}>Make a Wish</h1>
+          <h2 className={styles.wishTitle}>Make a Wish</h2>
           <span className={styles.titleHeartR} aria-hidden="true">♡</span>
         </div>
 

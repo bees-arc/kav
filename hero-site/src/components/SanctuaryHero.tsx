@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -48,7 +48,7 @@ export default function SanctuaryHero({
         transition={{ duration: 0.6 }}
       >
         <div className={styles.headerGroup}>
-          <h1 className={styles.mainTitle}>Happy Birthday,</h1>
+          <h2 className={styles.mainTitle}>Happy Birthday,</h2>
           <div className={styles.nameTitle}>
             <span>Kaawya</span>
             <span className={styles.heartGlyph}>♡</span>

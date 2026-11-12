@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -44,15 +44,7 @@ export const metadata: Metadata = {
       'Happy Birthday Kaawya! A special birthday website filled with beautiful memories, heartfelt wishes, and a surprise made just for Kaawya.',
     images: ['/og-image.png'],
   },
-  icons: {
-    icon: [
-      { url: '/bunny-favicon.png', type: 'image/png' },
-      { url: '/bunny-favicon.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/bunny-favicon.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
+  // Icons are provided by file conventions: src/app/favicon.ico, icon.png, apple-icon.png
 };
 
 export const viewport: Viewport = {
