@@ -7,7 +7,7 @@ import BunnyCakeHero from '@/components/BunnyCakeHero';
 import WishMessagePage from '@/components/WishMessagePage';
 import FerrisWheelHero from '@/components/FerrisWheelHero';
 import HeroSection, { preloadHeroFrames } from '@/components/HeroSection';
-import CountdownPage, { UNLOCK_TIME } from '@/components/CountdownPage';
+// import CountdownPage, { UNLOCK_TIME } from '@/components/CountdownPage';
 
 type PageStep = 'sanctuary' | 'cake' | 'wish' | 'ferris' | 'experience';
 
@@ -16,10 +16,12 @@ export default function Home() {
   const [direction, setDirection] = useState<1 | -1>(1);
   // null = not yet checked (avoids hydration mismatch)
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
-  const handleUnlock = useCallback(() => setUnlocked(true), []);
+  // const handleUnlock = useCallback(() => setUnlocked(true), []);
 
+  // TEMP BYPASS: countdown skipped
   useEffect(() => {
-    setUnlocked(Date.now() >= UNLOCK_TIME);
+    setUnlocked(true);
+    // setUnlocked(Date.now() >= UNLOCK_TIME);
   }, []);
 
   // Pre-capture hero video frames in background while user views initial pages
@@ -40,9 +42,9 @@ export default function Home() {
     return <main style={{ minHeight: '100dvh', background: '#0b1928' }} />;
   }
 
-  if (!unlocked) {
-    return <CountdownPage onComplete={handleUnlock} />;
-  }
+  // if (!unlocked) {
+  //   return <CountdownPage onComplete={handleUnlock} />;
+  // }
 
   return (
     <main style={{ position: 'relative', overflowX: 'hidden', minHeight: '100dvh' }}>
